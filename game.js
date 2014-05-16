@@ -42,6 +42,8 @@ function game() {
 		}
 	}
 	
+	var isiPad = navigator.userAgent.match(/iPad/i) != null;
+	
 	// BASIC GAME LOOP
 	
 	/*
@@ -93,6 +95,11 @@ function game() {
 		mouseDown: false
 	}
 	
+	if (isiPad) { //prevent scrolling on ios devices
+		document.ontouchmove = function(event) {
+			event.preventDefault();
+		}
+	}
 	document.addEventListener("keydown", keyDown, false);
 	document.addEventListener("keyup", keyUp, false);
 	canvas.addEventListener("mousemove", mouseMove, false);
@@ -143,23 +150,23 @@ function game() {
 	Note: layerX and layerY used since they determine the mouse's
 	x and y position *relative* to the canvas.
 	*/
-	function mouseMove(evt) {
+	function mouseMove(event) {
 		
-		if (evt.offsetX || evt.offsetX == 0) { // IE, Opera 
-			controls.mouseX = evt.offsetX;
-			controls.mouseY = evt.offsetY;
-		} else if (evt.layerX || evt.layerX == 0) { // Chrome, Firefox, Safari(?)
-			controls.mouseX = evt.layerX;
-			controls.mouseY = evt.layerY;
+		if (event.offsetX || event.offsetX == 0) { // IE, Opera 
+			controls.mouseX = event.offsetX;
+			controls.mouseY = event.offsetY;
+		} else if (event.layerX || event.layerX == 0) { // Chrome, Firefox, Safari(?)
+			controls.mouseX = event.layerX;
+			controls.mouseY = event.layerY;
 		}
 		
 		/* original version
-		if (evt.layerX || evt.layerX == 0) { // Firefox
-			controls.mouseX = evt.layerX;
-			controls.mouseY = evt.layerY;
-		} else if (evt.offsetX || evt.offsetX == 0) { // Opera
-			controls.mouseX = evt.offsetX;
-			controls.mouseY = evt.offsetY;
+		if (event.layerX || event.layerX == 0) { // Firefox
+			controls.mouseX = event.layerX;
+			controls.mouseY = event.layerY;
+		} else if (event.offsetX || event.offsetX == 0) { // Opera
+			controls.mouseX = event.offsetX;
+			controls.mouseY = event.offsetY;
 		}
 		*/
 		
@@ -177,6 +184,56 @@ function game() {
 		
 	}
 	
+	// https://developer.apple.com/library/safari/documentation/SafariDOMAdditions/Reference/DeviceMotionEventClassRef/DeviceMotionEvent/DeviceMotionEvent.html
+	// https://developer.apple.com/library/safari/documentation/SafariDOMAdditions/Reference/DeviceOrientationEventClassRef/DeviceOrientationEvent/DeviceOrientationEvent.html
+	var ioscontrols = {
+		xaccel: 0, // x acceleration (In the plane of the screen, positive towards the right side of the screen.)
+		yaccel: 0, // y acceleration (In the plane of the screen, positive towards the top of the screen.)
+		zaccel: 0, // z accelaration (Perpendicular to the screen, positive out of the screen.)
+		alpha: 0, // rotation, in degrees, of the device frame around its z-axis.
+		beta: 0, // rotation, in degrees, of the device frame around its x-axis.
+		gamma: 0, // rotation, in degrees, of the device frame around its y-axis.
+		tapping: false
+	};
+	
+	if (window.DeviceMotionEvent !== undefined) {
+		window.ondevicemotion = function(event) {
+			ioscontrols.xaccel = event.accelerationIncludingGravity.x;
+			ioscontrols.yaccel = event.accelerationIncludingGravity.y;
+			ioscontrols.zaccel = event.accelerationIncludingGravity.z;
+			ioscontrols.alpha = event.rotationRate.alpha;
+			ioscontrols.beta = event.rotationRate.beta;
+			ioscontrols.gamma = event.rotationRate.gamma;
+		}
+	}
+	
+	if (isiPad) {
+		document.addEventListener("touchstart", touchStart, false);
+		document.addEventListener("touchmove", touchMove, false);
+		document.addEventListener("touchend", touchEnd, false);
+		document.addEventListener("touchcancel", touchCancel, false);
+	
+		function touchStart(event) {
+			if (event.touches.length > 0) {
+				ioscontrols.tapping = true;
+			}
+		}
+		
+		function touchMove(event) {
+			// code
+		}
+		
+		function touchEnd(event) {
+			if (event.touches.length === 0) {
+				ioscontrols.tapping = false;
+			}
+		}
+		
+		function touchCancel(event) {
+			// code
+		}
+	}
+	
 	// UPDATING GAME LOGIC
 	
 	/*
@@ -191,6 +248,11 @@ function game() {
 	
 	var system = {
 		stage: 0,
+		score: {
+			current: 0, // variable - score of current round
+			high: 0, // variable - high score
+			cooldown: 0 // frames for animation
+		},
 		character: {
 			x: 50, // variable - x position (0 to 100)
 			dx: 0, // variable - horizontal speed (approx. -1 to 1)
@@ -210,7 +272,13 @@ function game() {
 			colliding: false, // variable - boolean representing collision with panel
 			cooldown: 0, // variable - temporary 5-tick cooldown for sensing collisions
 			gravity: -0.05, // constant - dy increment representing to gravity
-			size: 3.5 // constant - ball radius (in terms of screen-units)
+			size: 3.5, // constant - ball radius (in terms of screen-units)
+			bounciness: 2.2 // variable - increases each time the score increases
+		},
+		target: {
+			x: 20, // variable - x position (0 to 100)
+			y: 20, // variable - y position (0 to 75)
+			size: 6  // constant - target size (in terms of screen-units)
 		}
 	}
 	
@@ -275,7 +343,10 @@ function game() {
 				title.titleOpacity = 100;
 				title.buttonOpacity = 100;
 			} else if (title.frame > 60) {
-				if (controls.space == true) {
+				if (!isiPad && controls.space == true) {
+					system.stage = 2;
+				}
+				if (isiPad && ioscontrols.tapping == true) {
 					system.stage = 2;
 				}
 			}
@@ -284,11 +355,18 @@ function game() {
 		// 2 - instructions
 		if (system.stage == 2) {
 			if (instructions.unpressed == false) {
-				if (controls.space == false) {
+				if (!isiPad && controls.space == false) {
+					instructions.unpressed = true;
+				}
+				if (isiPad && ioscontrols.tapping == false) {
 					instructions.unpressed = true;
 				}
 			} else if (instructions.unpressed) {
-				if (controls.space == true) {
+				if (!isiPad && controls.space == true) {
+					instructions.repressed = true;
+					system.stage = 3;
+				}
+				if (isiPad && ioscontrols.tapping == true) {
 					instructions.repressed = true;
 					system.stage = 3;
 				}
@@ -298,15 +376,34 @@ function game() {
 		// 3 - main game
 		if (system.stage == 3) {
 			
+			// score update
+			if (system.score.cooldown > 0) {
+				system.score.cooldown -= 1;
+			}
+			
 			// character updates
-			if (controls.right == true) {
-				system.character.dx += system.character.speed;
+			if (!isiPad) {
+				if (controls.right == true) {
+					system.character.dx += system.character.speed;
+				}
+				if (controls.left == true) {
+					system.character.dx -= system.character.speed;
+				}
+				system.character.dx *= system.character.friction;
+				system.character.x += system.character.dx;
+			} else {
+				system.character.x = ((system.character.x * 14) + (((0 - ioscontrols.yaccel) + 3) * 15)) / 15;
+				/*
+				if (system.character.x - (((0 - ioscontrols.yaccel) + 3) * 15) > 5) {
+					system.character.dx -= system.character.speed;
+				}
+				if (system.character.x - (((0 - ioscontrols.yaccel) + 3) * 15) < -5) {
+					system.character.dx += system.character.speed;
+				}
+				system.character.dx *= system.character.friction;
+				system.character.x += system.character.dx;
+				*/
 			}
-			if (controls.left == true) {
-				system.character.dx -= system.character.speed;
-			}
-			system.character.dx *= system.character.friction;
-			system.character.x += system.character.dx;
 			
 			if (system.character.x > 100) {
 				system.character.x = 100;
@@ -315,13 +412,30 @@ function game() {
 				system.character.x = 0;
 			}
 			
+			var toDegrees = function(rad) {
+				return ((rad * 180) / Math.PI);
+			};
+			
 			// panel updates
-			if (controls.up == true) {
-				system.panel.tilt += system.panel.speed;
-			}
-			if (controls.down == true) {
-				system.panel.tilt -= system.panel.speed;
-			}
+			/* if (!isiPad) {
+				if (controls.up == true) {
+					system.panel.tilt += system.panel.speed;
+				}
+				if (controls.down == true) {
+					system.panel.tilt -= system.panel.speed;
+				}
+			} else { */
+				system.panel.tilt = toDegrees(Math.atan(((30 - Math.abs(system.target.y - 30)) - 58) / (system.target.x - system.character.x)));
+				if (system.panel.tilt < 0) {
+					system.panel.tilt += 180;
+				}
+				var tiltToBall = toDegrees(Math.atan((system.ball.y - 58) / (system.ball.x - system.character.x)));
+				if (tiltToBall < 0) {
+					tiltToBall += 180;
+				}
+				system.panel.tilt = (system.panel.tilt + tiltToBall) / 2;
+				system.panel.tilt = ((system.panel.tilt - 90) * 0.5) + 90;
+			// }
 			
 			if (system.panel.tilt > 180) {
 				system.panel.tilt = 180;
@@ -330,18 +444,21 @@ function game() {
 				system.panel.tilt = 0;
 			}
 			
-			// ball updates
+			// ************
+			// Ball updates
+			// ************
+			
 			system.ball.dy += system.ball.gravity;
 			
 			system.ball.x += system.ball.dx;
 			system.ball.y -= system.ball.dy;
 			
-			if (system.ball.x > 100) {
-				system.ball.x = 100;
+			if (system.ball.x > (100 - (system.ball.size * 0.8))) {
+				system.ball.x = (100 - (system.ball.size * 0.8));
 				system.ball.dx *= -1;
 			}
-			if (system.ball.x < 0) {
-				system.ball.x = 0;
+			if (system.ball.x < (system.ball.size * 0.8)) {
+				system.ball.x = (system.ball.size * 0.8);
 				system.ball.dx *= -1;
 			}
 			if (system.ball.y > 75) { //death
@@ -349,14 +466,20 @@ function game() {
 				system.ball.y = 5;
 				system.ball.dy = 0;
 				system.ball.dx = 0;
+				system.ball.bounciness = 2.2;
+				system.ball.gravity = -0.05;
 				system.panel.tilt = 90;
-				system.character.x = 50;
-				system.character.dx = 0;
+				if (!isiPad) {
+					system.character.x = 50;
+					system.character.dx = 0;
+				}
+				system.character.speed = 0.1;
+				if (system.score.current > system.score.high) {
+					system.score.high = system.score.current;
+				}
+				system.score.current = 0;
 			}
 			
-			var toDegrees = function(rad) {
-				return ((rad * 180) / Math.PI);
-			};
 			var toRadians = function(deg) {
 				return ((deg * Math.PI) / 180);
 			};
@@ -364,9 +487,8 @@ function game() {
 				return Math.sqrt(((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1)));
 			};
 			
-			// Function for rotating a point - see https://en.wikipedia.org/wiki/Rotation_(mathematics)
+			// Function for rotating a point (counterclockwise, technically) - see https://en.wikipedia.org/wiki/Rotation_(mathematics)
 			// based on this code: http://stackoverflow.com/questions/3162643/proper-trigonometry-for-rotating-a-point-around-the-origin
-			// note: rotates counterclockwise, technically
 			// ...                        angle in radians!
 			var rotatePoint = function(cx, cy, angle, px, py) {
 				var s = Math.sin(angle);
@@ -384,7 +506,9 @@ function game() {
 				return {x: pxnew, y: pynew};
 			};
 			
-			// collision detection
+			// *******************
+			// Collision detection
+			// *******************
 			
 			var isCollision = function() {
 				// coordinates of the panel's collision assuming it is tilted upwards - x is relative to the character, y is based on grid
@@ -438,14 +562,33 @@ function game() {
 			
 			var bounce = function(dir) { // the argument "dir" is the direction of the surface being bounced against (in degrees)
 				//var speed = Math.sqrt(Math.pow(system.ball.dx, 2) + Math.pow(system.ball.dy, 2));
-				var speed = 2.2;
 				system.ball.direction = dir // + (dir - (180 - system.ball.direction));
-				system.ball.dx = speed * (Math.sin(toRadians(system.ball.direction)));
-				system.ball.dy = speed * (Math.cos(toRadians(system.ball.direction)));
+				system.ball.dx = system.ball.bounciness * (Math.sin(toRadians(system.ball.direction)));
+				system.ball.dy = system.ball.bounciness * (Math.cos(toRadians(system.ball.direction)));
 			};
 			
 			if (system.ball.colliding) {
 				bounce(system.panel.tilt - 90);
+			}
+			
+			// target updates
+			
+			if (distance(system.ball.x, system.ball.y, system.target.x, system.target.y) < (system.target.size + system.ball.size)) {
+				system.score.current += 1;
+				system.score.cooldown = 60;
+				// system.ball.gravity -= 0.001;
+				// system.ball.bounciness += 0.02;
+				// system.character.speed += 0.0002;
+				var x, y, i;
+				for (i = 0; i <= 5; i++) {
+					x = 20 + Math.round(Math.random() * 60);
+					y = 10 + Math.round(Math.random() * 45);
+					if (distance(system.ball.x, system.ball.y, system.target.x, system.target.y) > 20) {
+						i = 6;
+					}
+				}
+				system.target.x = x;
+				system.target.y = y;
 			}
 			
 		}
@@ -470,7 +613,9 @@ function game() {
 				ctx.textAlign = alignment;
 				if (alignment == "center") {
 					ctx.fillText(text, x * (canvas.width / 100), (y * (canvas.height / 75)) + (fontsize * canvas.height / 140));
-				} else {
+				} else if (alignment === "left") {
+					ctx.fillText(text, x * (canvas.width / 100), (y * (canvas.height / 75)) + (fontsize * canvas.height / 70));
+				} else if (alignment === "right") {
 					ctx.fillText(text, x * (canvas.width / 100), (y * (canvas.height / 75)) + (fontsize * canvas.height / 70));
 				}
 			};
@@ -538,16 +683,6 @@ function game() {
 				temp = rotatePoint(centerx, centery, toRadians(system.panel.tilt - 90), system.character.x + x4, y4);
 				ctx.lineTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
 				ctx.fill();
-				
-				/*
-				ctx.fillStyle = "#888";
-				ctx.save();
-				ctx.translate(((system.character.x / 100) * canvas.width) - (canvas.height / 10) + ((system.panel.tilt - 90) * (canvas.height / 1200)), (canvas.height * 0.75));
-				ctx.translate((canvas.height / 10), (canvas.height / 40));
-				ctx.rotate(Math.PI * ((system.panel.tilt - 90) / 180));
-				ctx.fillRect((0 - (canvas.height / 10)), (0 - (canvas.height / 40)), (canvas.height / 5), (canvas.height / 20));
-				ctx.restore();
-				*/
 			};
 			
 			// Function for drawing the white ball
@@ -556,6 +691,29 @@ function game() {
 				ctx.beginPath();
 				ctx.arc(((system.ball.x / 100) * canvas.width), ((system.ball.y / 75) * canvas.height), ((canvas.width / 100) * system.ball.size), 0, (Math.PI * 2));
 				ctx.fill();
+			};
+			
+			// Function for drawing the target
+			var drawTarget = function() {
+				ctx.fillStyle = "#666";
+				ctx.beginPath();
+				ctx.arc(((system.target.x / 100) * canvas.width), ((system.target.y / 75) * canvas.height), ((canvas.width / 100) * system.target.size), 0, (Math.PI * 2));
+				ctx.fill();
+				ctx.fillStyle = "#AAA";
+				ctx.beginPath();
+				ctx.arc(((system.target.x / 100) * canvas.width), ((system.target.y / 75) * canvas.height), ((canvas.width / 100) * (system.target.size * 2/3)), 0, (Math.PI * 2));
+				ctx.fill();
+				ctx.fillStyle = "#666";
+				ctx.beginPath();
+				ctx.arc(((system.target.x / 100) * canvas.width), ((system.target.y / 75) * canvas.height), ((canvas.width / 100) * (system.target.size * 1/3)), 0, (Math.PI * 2));
+				ctx.fill();
+			};
+			
+			// Function for drawing the score
+			var drawScore = function() {
+				dispMsg(system.score.current, "Trebuchet MS", 45, 100, 25, "rgba(255, 255, 255, " + (0.2 + ((system.score.cooldown / 60) * 0.8)) + ")", "right");
+				dispMsg("High Score:", "Trebuchet MS", 3, 1, 4, "#FFF", "left");
+				dispMsg(system.score.high, "Trebuchet MS", 6, 23, 1, "#FFF", "left");
 			};
 			
 			// Function for drawing certain points for debugging
@@ -589,30 +747,19 @@ function game() {
 				temp = rotatePoint(centerx, centery, toRadians(system.panel.tilt - 90), system.character.x + x5, y5);
 				ctx.arc((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width), (2.5 / 100 * canvas.width), 0, (Math.PI * 2));
 				ctx.fill();
-				/*
-				var x = system.character.x + ((Math.sin(toRadians(system.panel.tilt - 90))) * (10 * (canvas.height / canvas.width)));
-				var y = 80 - ((Math.cos(toRadians(system.panel.tilt - 90))) * 5);
-				ctx.arc(((x / 100) * canvas.width), ((y / 100) * canvas.height), 5, 0, (Math.PI * 2));
-				var x1 = x + ((Math.sin(toRadians(system.panel.tilt - 180))) * (8 * (canvas.height / canvas.width)));
-				var y1 = y - ((Math.cos(toRadians(system.panel.tilt - 180))) * 8);
-				ctx.arc(((x1 / 100) * canvas.width), ((y1 / 100) * canvas.height), 5, 0, (Math.PI * 2));
-				var x2 = x + ((Math.sin(toRadians(system.panel.tilt - 180))) * (4 * (canvas.height / canvas.width)));
-				var y2 = y - ((Math.cos(toRadians(system.panel.tilt - 180))) * 4);
-				ctx.arc(((x2 / 100) * canvas.width), ((y2 / 100) * canvas.height), 5, 0, (Math.PI * 2));
-				var x4 = x + ((Math.sin(toRadians(system.panel.tilt))) * (4 * (canvas.height / canvas.width)));
-				var y4 = y - ((Math.cos(toRadians(system.panel.tilt))) * 4);
-				ctx.arc(((x4 / 100) * canvas.width), ((y4 / 100) * canvas.height), 5, 0, (Math.PI * 2));
-				var x5 = x + ((Math.sin(toRadians(system.panel.tilt))) * (8 * (canvas.height / canvas.width)));
-				var y5 = y - ((Math.cos(toRadians(system.panel.tilt))) * 8);
-				ctx.arc(((x5 / 100) * canvas.width), ((y5 / 100) * canvas.height), 5, 0, (Math.PI * 2));
-				ctx.fill();
-				*/
 			};
 			
 			// Function for drawing debug info
 			var drawDebugInfo = function() {
-				dispMsg("FPS: " + ((Math.round(currentfps * 10)) / 10), "Trebuchet MS", 3, 1, 1, "#FFF", "left");
-				dispMsg("v. 2.1_05 (b26)", "Trebuchet MS", 3, 70, 1, "#FFF", "left");
+				dispMsg("FPS: " + ((Math.round(currentfps * 10)) / 10), "Trebuchet MS", 2, 100, 6.5, "#FFF", "right");
+				if (isiPad) {
+					// dispMsg("Using iPad", "Trebuchet MS", 2, 100, 9, "#FFF", "right");
+					// dispMsg("YAccel: " + ((Math.round(ioscontrols.yaccel * 10)) / 10), "Trebuchet MS", 2, 100, 11.5, "#FFF", "right");
+					// dispMsg("Tapping?: " + ioscontrols.tapping, "Trebuchet MS", 2, 100, 14, "#FFF", "right");
+				} else {
+					// dispMsg("Not using iPad", "Trebuchet MS", 2, 100, 9, "#FFF", "right");
+				}
+				dispMsg("v. 2.1_05 (b26)", "Trebuchet MS", 3, 100, 1, "#FFF", "right");
 				// dispMsg("sys.char.dx: " + ((Math.round(system.character.dx * 10)) / 10), "Trebuchet MS", 24, 100, 50, "#FFF");
 				// dispMsg("Mouse X: " + controls.mouseX + " (" + ((Math.round((controls.mouseX / (canvas.width / 100)) * 10)) / 10) + ")", "Trebuchet MS", 3, 1, 5, "#FFF");
 				// dispMsg("Mouse Y: " + controls.mouseY + " (" + ((Math.round((controls.mouseY / (canvas.height / 75)) * 10)) / 10) + ")", "Trebuchet MS", 3, 1, 9, "#FFF");
@@ -638,25 +785,38 @@ function game() {
 			
 			// Displays intro messages
 			if (system.stage == 0) {
-				dispMsg(intro.messages[intro.currentMsg], "Trebuchet MS Italic", 4, intro.msgPos, 37.5, "rgba(255, 255, 255, " + (intro.msgOpacity / 100) + ")", "center");
+				dispMsg(intro.messages[intro.currentMsg], "Trebuchet MS", 4, intro.msgPos, 37.5, "rgba(255, 255, 255, " + (intro.msgOpacity / 100) + ")", "center");
 			}
 			
 			//  Displays menu text
 			if (system.stage == 1) {
 				dispMsg("fast catch", "Trebuchet MS", 10, 50, 28, "rgba(255, 255, 255, " + (title.titleOpacity / 100) + ")", "center");
 				dispMsg("start", "Trebuchet MS", 6, 50, 45, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
-				dispMsg("(press space)", "Trebuchet MS", 3, 50, 52, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
+				if (isiPad) {
+					dispMsg("(tap the screen)", "Trebuchet MS", 3, 50, 52, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
+				} else {
+					dispMsg("(press space)", "Trebuchet MS", 3, 50, 52, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
+				}
 			}
 			
 			// Displays instructions
 			if (system.stage == 2) {
-				dispMsg("Use ← and → to move", "Trebuchet MS", 4, 50, 25, "#FFF", "center");
-				dispMsg("Use ↑ and ↓ to tilt your paddle", "Trebuchet MS", 4, 50, 35, "#FFF", "center");
-				dispMsg("(press space to play)", "Trebuchet MS", 3, 50, 45, "#FFF", "center");
+				if (isiPad) {
+					dispMsg("Hold your iPad sideways", "Trebuchet MS", 4, 50, 20, "#FFF", "center");
+					dispMsg("(home button to the right →)", "Trebuchet MS", 4, 50, 30, "#FFF", "center");
+					dispMsg("Tilt your iPad to move the panel", "Trebuchet MS", 4, 50, 40, "#FFF", "center");
+					dispMsg("(tap the screen to play)", "Trebuchet MS", 3, 50, 50, "#FFF", "center");
+				} else {
+					dispMsg("Use ← and → to move", "Trebuchet MS", 4, 50, 25, "#FFF", "center");
+					dispMsg("Use ↑ and ↓ to tilt your paddle", "Trebuchet MS", 4, 50, 35, "#FFF", "center");
+					dispMsg("(press space to play)", "Trebuchet MS", 3, 50, 45, "#FFF", "center");
+				}
 			}
 			
 			// Display game information
 			if (system.stage == 3) {
+				drawScore();
+				drawTarget();
 				drawChar();
 				drawPanel();
 				drawBall();
@@ -692,221 +852,3 @@ function game() {
 }
 
 window.onload = game;
-
-/* function game() {
-	
-	var fps = 60;
-	var gamePaused = false;
-	var clock = setInterval(gameLoop, 1000 / fps);
-	
-	var player = {
-		x: 30,
-		y: (document.height / 2) - 25,
-		r: 25,
-		vx: 5,
-		vy: 0
-		};
-		
-	// CONSTANTS
-	var gravity = 720;
-	var friction = 0.95;
-	var jumpFriction = 0.5;
-	var lrAccel = 30; // acceleration from pressing left or right
-	var jumpAccel = -500;
-	
-	// KEY PRESSES
-	var rightKey = false;
-	var leftKey = false;
-	var upKey = false;
-	var downKey = false;
-	var justPressedUp = false;
-	
-	var canvas = document.getElementById("myCanvas");
-	canvas.width = document.width;
-	canvas.height = document.height;
-	document.addEventListener('keydown', keyDown, false);
-	document.addEventListener('keyup', keyUp, false);
-	
-	//add detection of window resizing with window.resize?
-	
-	function keyDown(key) {
-		if (key.keyCode == 80) {
-			pauseGame();
-		}
-		
-		if (key.keyCode == 37) {
-			leftKey = true;
-		}
-		
-		if (key.keyCode == 38) {
-			if (upKey == false) {
-				upKey = true;
-				justPressedUp = true;
-				window.setTimeout(resetJustPressedUp, 200);
-			}
-		}
-		
-		if (key.keyCode == 39) {
-			rightKey = true;
-		}
-		
-		if (key.keyCode == 40) {
-			downKey = true;
-		}
-	}
-	
-	function keyUp(key) {
-		
-		if (key.keyCode == 37) {
-			leftKey = false;
-		}
-		
-		if (key.keyCode == 38) {
-			upKey = false;
-			justPressedUp = false;
-		}
-		
-		if (key.keyCode == 39) {
-			rightKey = false;
-		}
-		
-		if (key.keyCode == 40) {
-			downKey = false;
-		}
-		
-	}
-	
-	function resetJustPressedUp() {
-		justPressedUp = false;
-	}
-		
-	function pauseGame() {
-	
-		if (!gamePaused) {
-			gamePaused = true;
-		} else if (gamePaused) {
-			gamePaused = false;
-		}
-		
-	}
-
-	function gameLoop() {
-		
-		if (gamePaused == false) update();
-		draw();
-		if (gamePaused == true) pauseScreen();
-		
-	}
-	
-	function update() {
-	
-		player.x += (player.vx / fps);
-		player.y += (player.vy / fps);
-		player.vy += (gravity / fps);
-		player.vx *= Math.pow(friction, 60 / fps);
-		
-		// Setting boundaries
-		
-		if (player.y > (canvas.height - player.r)) {
-			player.y = canvas.height - player.r;
-			player.vy = 0 - (player.vy * jumpFriction);
-		}
-		
-		if (player.x < player.r) {
-			player.x = player.r;
-			player.vx = 0 - (player.vx * friction);
-		}
-		
-		// other logic
-		
-		if (Math.abs(player.vy) < 0.001) {
-			player.vy = 0;
-		}
-		
-		if (player.y > (canvas.height - player.r - 5) && justPressedUp == true) {
-			player.vy = jumpAccel;
-		}
-		
-		if (rightKey == true) {
-			player.vx += (lrAccel * (60 / fps));
-		}
-		
-		if (leftKey == true) {
-			player.vx -= (lrAccel * (60 / fps));
-		}
-	}
-	
-	function draw() {
-	
-		// Rendering the game
-	
-		if (canvas.getContext) {
-		
-			var ctx = canvas.getContext("2d");
-
-			// Clear canvas
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-			// Red circle
-			ctx.fillStyle = "#FF0000";
-			ctx.beginPath();
-			ctx.arc(player.x, player.y, player.r, 0, Math.PI*2, false);
-			ctx.fill();
-
-			// Inner circle 1
-			ctx.fillStyle = "#FF3333";
-			ctx.beginPath();
-			ctx.arc(player.x + 5, player.y - 5, player.r - 7, 0, Math.PI*2, false);
-			ctx.fill();
-
-			// Dark red border
-			ctx.strokeStyle = "#B20000";
-			ctx.lineWidth = 4;
-			ctx.beginPath();
-			ctx.arc(player.x, player.y, player.r, 0, Math.PI*2, false);
-			ctx.stroke();
-			
-			// Debug text
-			
-			ctx.font = "18pt Calibri";
-			ctx.fillStyle = "#000";
-			ctx.fillText("player.x: " + player.x, 20, 40);
-			ctx.fillText("player.y: " + player.y, 20, 70);
-			ctx.fillText("player.vx: " + player.vx, 20, 100);
-			ctx.fillText("player.vy: " + player.vy, 20, 130);
-			ctx.fillText("upKey: " + upKey, 20, 160);
-			ctx.fillText("justPressedUp: " + justPressedUp, 20, 190);
-
-		}
-	}
-	
-	function pauseScreen() {
-		
-		//Rendering the pause menus
-		
-		if (canvas.getContext) {
-			
-			var ctx = canvas.getContext("2d");
-			
-			// Puts gray overlay over the game
-			
-			ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-			ctx.fillRect(0, 0, canvas.width, canvas.height);
-			
-			// Draws dark gray box for a pause menu
-			
-			ctx.fillRect((canvas.width / 2) - 150, (canvas.height / 2) - 100, 300, 200);
-			
-			// Adds text "The game is currently paused."
-			
-			ctx.font = "24pt Calibri";
-			ctx.fillStyle = "#FFF";
-			ctx.fillText("PAUSE", (canvas.width / 2) - 40, (canvas.height / 2));
-			
-		}
-		
-	}
-	
-}
-
-window.onload = game; */
