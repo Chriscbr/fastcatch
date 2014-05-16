@@ -1,4 +1,4 @@
-﻿// *********
+// *********
 // STRUCTURE
 // *********
 
@@ -14,6 +14,7 @@ TODO:
 - animate instructions
 - add shadows?
 - fade-in effect for target appearing?
+- adjust tilt controls
 
 shadows:
 ctx.shadowBlur = 5;
@@ -24,13 +25,13 @@ ctx.shadowOffsetY = 6;
 
 function game() {
 
-	var debug = true; // Debug mode (sometimes used?)
-	
-	// ******************
-	// GETTING THE CANVAS
-	// ******************
-	
-	/*
+  var debug = true; // Debug mode (sometimes used?)
+
+  // ******************
+  // GETTING THE CANVAS
+  // ******************
+
+  /*
 	First the canvas variable is defined so it can be operated on by the
 	javascript. The canvas's width and height are set so they will form a 4:3
 	aspect ratio while maximizing screenspace. The dimensions will update when
@@ -51,57 +52,58 @@ function game() {
 	- X: 0 (left edge) to 100 (right edge)
 	- Y: 0 (top edge) to 75 (bottom edge)
 	*/
-	
-	/*
+
+  /*
 	This detects if the user is using an iPad, and outputs true if so, and
 	false otherwise. This is used for things like changing controls or
 	displaying different text for menus / instructions.
 	*/
-	
-	var isiOS = navigator.userAgent.match(/(iPad|iPhone|iPod)/i) != null;
-	
-	var canvas = document.getElementById("myCanvas");
-	var screenRatio = window.innerWidth / window.innerHeight;
-	
-	if (canvas.getContext) {
-	
-	var ctx = canvas.getContext("2d");
-	
-	window.onresize = function() {
-		screenRatio = window.innerWidth / window.innerHeight;
-		if (screenRatio > (4/3)) {
-			canvas.height = window.innerHeight;
-			canvas.width = window.innerHeight * (4/3);
-			if (screenRatio - (4/3) > 0.01) {
-				canvas.style.borderWidth = "0px 2px";
-			} else {
-				canvas.style.borderWidth = "0px";
-			}
-		} else {
-			canvas.width = window.innerWidth;
-			canvas.height = window.innerWidth * (3/4);
-			if (screenRatio - (4/3) < -0.01) {
-				canvas.style.borderWidth = "2px 0px";
-			} else {
-				canvas.style.borderWidth = "0px";
-			}
-		}
-		/*
+
+  var isiOS = navigator.userAgent.match(/(iPad|iPhone|iPod)/i) !== null;
+
+  var canvas = document.getElementById("myCanvas");
+  var screenRatio = window.innerWidth / window.innerHeight;
+
+  if (canvas.getContext) {
+
+    var ctx = canvas.getContext("2d");
+
+    window.onresize = function () {
+      screenRatio = window.innerWidth / window.innerHeight;
+      if (screenRatio > (4 / 3)) {
+        canvas.height = window.innerHeight;
+        canvas.width = window.innerHeight * (4 / 3);
+        if (screenRatio - (4 / 3) > 0.01) {
+          canvas.style.borderWidth = "0px 2px";
+        } else {
+          canvas.style.borderWidth = "0px";
+        }
+      } else {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerWidth * (3 / 4);
+        if (screenRatio - (4 / 3) < -0.01) {
+          canvas.style.borderWidth = "2px 0px";
+        } else {
+          canvas.style.borderWidth = "0px";
+        }
+      }
+      /*
 		if (isiOS) {
 			rescaleCanvas();
 		}
 		*/
-	};
-	
-	window.onresize();
-	
-	/*
+    };
+
+    window.onresize();
+
+    /*
 	This function is included to (attempt) fixing some blurriness issues with
 	playing the game on iPhones with retina displays.
 	Code based from: http://www.html5rocks.com/en/tutorials/canvas/hidpi/
 	*/
-	function rescaleCanvas() {
-		var devicePixelRatio = window.devicePixelRatio || 1;
+    function rescaleCanvas() {
+      var devicePixelRatio = window.devicePixelRatio || 1;
+      /* unused:
 		var backingStoreRatio = ctx.webkitBackingStorePixelRatio ||
 								ctx.mozBackingStorePixelRatio ||
 								ctx.msBackingStorePixelRatio ||
@@ -109,7 +111,6 @@ function game() {
 								ctx.backingStorePixelRatio || 1;
 		var ratio = devicePixelRatio / backingStoreRatio;
 		
-		/*
 		if (devicePixelRatio !== backingStoreRatio) {
 			var oldWidth = canvas.width;
 			var oldHeight = canvas.height;
@@ -123,26 +124,26 @@ function game() {
 			ctx.scale(ratio, ratio);
 		}
 		*/
-		
-		if (devicePixelRatio !== 1) {
-			var oldWidth = canvas.width;
-			var oldHeight = canvas.height;
-			
-			canvas.width = oldWidth * devicePixelRatio;
-			canvas.height = oldHeight * devicePixelRatio;
-			
-			canvas.style.width = oldWidth + 'px';
-			canvas.style.height = oldHeight + 'px';
-			
-			// ctx.scale(devicePixelRatio, devicePixelRatio);
-		}
-	}
-	
-	// ********
-	// CONTROLS
-	// ********
-	
-	/* 
+
+      if (devicePixelRatio !== 1) {
+        var oldWidth = canvas.width;
+        var oldHeight = canvas.height;
+
+        canvas.width = oldWidth * devicePixelRatio;
+        canvas.height = oldHeight * devicePixelRatio;
+
+        canvas.style.width = oldWidth + 'px';
+        canvas.style.height = oldHeight + 'px';
+
+        // ctx.scale(devicePixelRatio, devicePixelRatio);
+      }
+    }
+
+    // ********
+    // CONTROLS
+    // ********
+
+    /* 
 	To make variables for the controls easily accessible in other parts of the
 	program, I used an object called controls with different attributes for the
 	different values.
@@ -152,108 +153,108 @@ function game() {
 	
 	Keycode reference: http://unixpapa.com/js/key.html
 	*/
-	
-	var controls = {
-		left: false,
-		up: false,
-		right: false,
-		down: false,
-		space: false,
-		mouseX: 0,
-		mouseY: 0,
-		mouseDown: false
-	}
-	
-	// This prevents scrolling on iPads
-	
-	/*
+
+    var controls = {
+      left: false,
+      up: false,
+      right: false,
+      down: false,
+      space: false,
+      mouseX: 0,
+      mouseY: 0,
+      mouseDown: false
+    };
+
+    // This prevents scrolling on iPads
+
+    /*
 	if (isiOS) {
 		document.ontouchmove = function(event) {
 			event.preventDefault();
 		}
 	}
 	*/
-	
-	document.addEventListener("keydown", keyDown, false);
-	document.addEventListener("keyup", keyUp, false);
-	canvas.addEventListener("mousemove", mouseMove, false);
-	canvas.addEventListener("mousedown", mouseDown, false);
-	canvas.addEventListener("mouseup", mouseUp, false);
-	
-	function keyDown (key) {
-		
-		if (key.keyCode === 32) {
-			controls.space = true;
-		}
-		if (key.keyCode === 37) {
-			controls.left = true;
-		}
-		if (key.keyCode === 38) {
-			controls.up = true;
-		}
-		if (key.keyCode === 39) {
-			controls.right = true;
-		}
-		if (key.keyCode === 40) {
-			controls.down = true;
-		}
-		
-	}
-	
-	function keyUp (key) {
-		
-		if (key.keyCode === 32) {
-			controls.space = false;
-		}
-		if (key.keyCode === 37) {
-			controls.left = false;
-		}
-		if (key.keyCode === 38) {
-			controls.up = false;
-		}
-		if (key.keyCode === 39) {
-			controls.right = false;
-		}
-		if (key.keyCode === 40) {
-			controls.down = false;
-		}
-		
-	}
-	
-	/*
+
+    document.addEventListener("keydown", keyDown, false);
+    document.addEventListener("keyup", keyUp, false);
+    canvas.addEventListener("mousemove", mouseMove, false);
+    canvas.addEventListener("mousedown", mouseDown, false);
+    canvas.addEventListener("mouseup", mouseUp, false);
+
+    function keyDown(key) {
+
+      if (key.keyCode === 32) {
+        controls.space = true;
+      }
+      if (key.keyCode === 37) {
+        controls.left = true;
+      }
+      if (key.keyCode === 38) {
+        controls.up = true;
+      }
+      if (key.keyCode === 39) {
+        controls.right = true;
+      }
+      if (key.keyCode === 40) {
+        controls.down = true;
+      }
+
+    }
+
+    function keyUp(key) {
+
+      if (key.keyCode === 32) {
+        controls.space = false;
+      }
+      if (key.keyCode === 37) {
+        controls.left = false;
+      }
+      if (key.keyCode === 38) {
+        controls.up = false;
+      }
+      if (key.keyCode === 39) {
+        controls.right = false;
+      }
+      if (key.keyCode === 40) {
+        controls.down = false;
+      }
+
+    }
+
+    /*
 	Note: layerX and layerY used since they determine the mouse's x and y
 	position *relative* to the canvas.
 	*/
-	
-	function mouseMove (event) {
-		
-		if (event.offsetX || event.offsetX === 0) { // IE, Opera 
-			controls.mouseX = event.offsetX;
-			controls.mouseY = event.offsetY;
-		} else if (event.layerX || event.layerX === 0) { // Chrome, FF, Safari(?)
-			controls.mouseX = event.layerX;
-			controls.mouseY = event.layerY;
-		}
-		
-	}
-	
-	function mouseDown () {
-		
-		controls.mouseDown = true;
-		
-	}
-	
-	function mouseUp () {
-		
-		controls.mouseDown = false;
-		
-	}
-	
-	// ************
-	// iOS CONTROLS
-	// ************
-	
-	/*
+
+    function mouseMove(event) {
+
+      if (event.offsetX || event.offsetX === 0) { // IE, Opera 
+        controls.mouseX = event.offsetX;
+        controls.mouseY = event.offsetY;
+      } else if (event.layerX || event.layerX === 0) { // Chrome, FF, Safari(?)
+        controls.mouseX = event.layerX;
+        controls.mouseY = event.layerY;
+      }
+
+    }
+
+    function mouseDown() {
+
+      controls.mouseDown = true;
+
+    }
+
+    function mouseUp() {
+
+      controls.mouseDown = false;
+
+    }
+
+    // ************
+    // iOS CONTROLS
+    // ************
+
+    /*
 	Refrences: 
 	https://developer.apple.com/library/safari/documentation/SafariDOMAdditions/Reference/DeviceMotionEventClassRef/DeviceMotionEvent/DeviceMotionEvent.html
 	https://developer.apple.com/library/safari/documentation/SafariDOMAdditions/Reference/DeviceOrientationEventClassRef/DeviceOrientationEvent/DeviceOrientationEvent.html
@@ -261,89 +262,89 @@ function game() {
 	Although only the y acceleration of the iPad is currently used in the game, the
 	game still keeps track of the other variables for potential later use.
 	*/
-	var ioscontrols = {
-		xaccel: 0, // x acceleration (in the plane of the screen, positive towards the right side of the screen)
-		yaccel: 0, // y acceleration (in the plane of the screen, positive towards the top of the screen)
-		zaccel: 0, // z accelaration (perpendicular to the screen, positive out of the screen)
-		alpha: 0, // rotation, in degrees, of the device frame around its z-axis.
-		beta: 0, // rotation, in degrees, of the device frame around its x-axis.
-		gamma: 0, // rotation, in degrees, of the device frame around its y-axis.
-		orientation: 0, // orientation of the device
-		tapping: false
-	};
-	
-	if (window.DeviceMotionEvent !== undefined) {
-		window.ondevicemotion = function(event) {
-			ioscontrols.xaccel = event.accelerationIncludingGravity.x;
-			ioscontrols.yaccel = event.accelerationIncludingGravity.y;
-			ioscontrols.zaccel = event.accelerationIncludingGravity.z;
-			ioscontrols.alpha = event.rotationRate.alpha;
-			ioscontrols.beta = event.rotationRate.beta;
-			ioscontrols.gamma = event.rotationRate.gamma;
-		}
-	}
-	
-	/*
+    var ioscontrols = {
+      xaccel: 0, // x acceleration (in the plane of the screen, positive towards the right side of the screen)
+      yaccel: 0, // y acceleration (in the plane of the screen, positive towards the top of the screen)
+      zaccel: 0, // z accelaration (perpendicular to the screen, positive out of the screen)
+      alpha: 0, // rotation, in degrees, of the device frame around its z-axis.
+      beta: 0, // rotation, in degrees, of the device frame around its x-axis.
+      gamma: 0, // rotation, in degrees, of the device frame around its y-axis.
+      orientation: 0, // orientation of the device
+      tapping: false
+    };
+
+    if (window.DeviceMotionEvent !== undefined) {
+      window.ondevicemotion = function (event) {
+        ioscontrols.xaccel = event.accelerationIncludingGravity.x;
+        ioscontrols.yaccel = event.accelerationIncludingGravity.y;
+        ioscontrols.zaccel = event.accelerationIncludingGravity.z;
+        ioscontrols.alpha = event.rotationRate.alpha;
+        ioscontrols.beta = event.rotationRate.beta;
+        ioscontrols.gamma = event.rotationRate.gamma;
+      };
+    }
+
+    /*
 	The touch sensing isn't completely implemented, so it only detects if the
 	user is pressing down or not. Ideally there will eventually be an option to
 	use touch controls to control the character for those not interested in
 	tilting the iPad.
 	*/
-	
-	if (isiOS) {
-		document.addEventListener("touchstart", touchStart, false);
-		document.addEventListener("touchmove", touchMove, false);
-		document.addEventListener("touchend", touchEnd, false);
-		document.addEventListener("touchcancel", touchCancel, false);
-	}
-	
-	function touchStart(event) {
-	
-		if (event.touches.length > 0) {
-			ioscontrols.tapping = true;
-		}
-		
-	}
-	
-	function touchMove(event) {
-	
-		// code
-		
-	}
-	
-	function touchEnd(event) {
-	
-		if (event.touches.length === 0) {
-			ioscontrols.tapping = false;
-		}
-		
-	}
-	
-	function touchCancel(event) {
-	
-		// code
-		
-	}
-	
-	window.onorientationchange = function() {
-		if (window.orientation === 0) {
-			ioscontrols.orientation = 0;
-		} else if (window.orientation === 90) {
-			ioscontrols.orientation = 90;
-		} else if (window.orientation === -90) {
-			ioscontrols.orientation = -90;
-		} else if (window.orientation === 180) {
-			ioscontrols.orientation = 180;
-		}
-	};
-	
-	window.onorientationchange();
-	
-	// **********
-	// GAME LOGIC
-	// **********
-	
-	/*
+
+    if (isiOS) {
+      document.addEventListener("touchstart", touchStart, false);
+      document.addEventListener("touchmove", touchMove, false);
+      document.addEventListener("touchend", touchEnd, false);
+      document.addEventListener("touchcancel", touchCancel, false);
+    }
+
+    function touchStart(event) {
+
+      if (event.touches.length > 0) {
+        ioscontrols.tapping = true;
+      }
+
+    }
+
+    function touchMove(event) {
+
+      // ...
+
+    }
+
+    function touchEnd(event) {
+
+      if (event.touches.length === 0) {
+        ioscontrols.tapping = false;
+      }
+
+    }
+
+    function touchCancel(event) {
+
+      // ...
+
+    }
+
+    window.onorientationchange = function () {
+      if (window.orientation === 0) {
+        ioscontrols.orientation = 0;
+      } else if (window.orientation === 90) {
+        ioscontrols.orientation = 90;
+      } else if (window.orientation === -90) {
+        ioscontrols.orientation = -90;
+      } else if (window.orientation === 180) {
+        ioscontrols.orientation = 180;
+      }
+    };
+
+    window.onorientationchange();
+
+    // **********
+    // GAME LOGIC
+    // **********
+
+    /*
 	The "system" variable stores information related to the objects and logic
 	of the game, as well as some animations - rendering is treated separately.
 	Keeping all of these variables in one place allow them to be easily
@@ -357,62 +358,64 @@ function game() {
 	- 2 represents the instructions
 	- 3 represents the main game
 	*/
-	
-	var system = {
-		stage: 0,
-		gameSpeed: 1, // variable - increases by gameAccel every frame
-		gameAccel: 0.001, // constant - speed at which gameSpeed increases
-		firstFrame: false, // reports true during the frame a point is scored
-		score: {
-			current: 0, // variable - score of current round
-			high: 10, // variable - high score
-			frame: 0, // frames for animation
-			HSframe: 0, // current frame for high score anim.
-			HSlength: 120 // constant - length (in frames) of high score anim.
-		},
-		character: {
-			x: 50, // variable - x position (0 to 100)
-			dx: 0, // variable - horizontal speed (approx. -1 to 1)
-			speed: 0.15, // constant - dx increment
-			friction: 0.91 // constant - dx friction
-		},
-		paddle: {
-			tilt: 90, // variable - paddle direction (0 to 180)
-			speed: 3 // constant - tilt speed
-		},
-		balls: {
-			data: [new Ball], // list of balls
-			avgBallX: 0, // variable - average ball x position
-			avgBallY: 0 // variable - average ball y position
-		},
-		target: {
-			x: 20, // variable - x position (0 to 100)
-			y: 20, // variable - y position (0 to 75)
-			size: 6  // constant - target size (in terms of screen-units)
-		},
-		particles: {
-			data: [], // list of particle positions
-			perTarget: 10, // constant - number of particles generated
-			max: 40, // constant - maximum number of particles on screen
-			gravity: 0.05, // constant - dy increment representing gravity
-			width: 0.5 // constant - width of particles in screen-units
-		},
-		itemBox: {
-			x: 80, // variable - x position (0 to 100)
-			y: 20, // variable - y position (0 to 75)
-			size: 10, // constant - target size (in terms of screen-units)
-			appearing: false, // variable - tells whether item is showing or not
-			direction: 45, // variable - current direction
-			turnSpeed: 1 // constant - speed at which the direction changes
-		},
-		itemDisplay: {
-			current: 0, // variable - the current item the user actually has
-			displayed: 0, // variable - the item displayed (part of animation)
-			frame: 0, // variable - the current frame
-		}
-	};
-	
-	/*
+
+    var system = {
+      stage: 0,
+      gameSpeed: 1, // variable - increases by gameAccel every frame
+      gameAccel: 0.001, // constant - speed at which gameSpeed increases
+      firstFrame: false, // reports true during the frame a point is scored
+      shake: 0, // used for making the screen scale up during hits (0-3)
+      scaled: false, // used to tell if the canvas is already scaled
+      score: {
+        current: 0, // variable - score of current round
+        high: 10, // variable - high score
+        frame: 0, // frames for animation
+        HSframe: 0, // current frame for high score anim.
+        HSlength: 120 // constant - length (in frames) of high score anim.
+      },
+      character: {
+        x: 50, // variable - x position (0 to 100)
+        dx: 0, // variable - horizontal speed (approx. -1 to 1)
+        speed: 0.15, // constant - dx increment
+        friction: 0.91 // constant - dx friction
+      },
+      paddle: {
+        tilt: 90, // variable - paddle direction (0 to 180)
+        speed: 3 // constant - tilt speed
+      },
+      balls: {
+        data: [new Ball()], // list of balls
+        avgBallX: 0, // variable - average ball x position
+        avgBallY: 0 // variable - average ball y position
+      },
+      target: {
+        x: 20, // variable - x position (0 to 100)
+        y: 20, // variable - y position (0 to 75)
+        size: 6 // constant - target size (in terms of screen-units)
+      },
+      particles: {
+        data: [], // list of particle positions
+        perTarget: 10, // constant - number of particles generated
+        max: 40, // constant - maximum number of particles on screen
+        gravity: 0.05, // constant - dy increment representing gravity
+        width: 0.5 // constant - width of particles in screen-units
+      },
+      itemBox: {
+        x: 80, // variable - x position (0 to 100)
+        y: 20, // variable - y position (0 to 75)
+        size: 10, // constant - target size (in terms of screen-units)
+        appearing: false, // variable - tells whether item is showing or not
+        direction: 45, // variable - current direction
+        turnSpeed: 1 // constant - speed at which the direction changes
+      },
+      itemDisplay: {
+        current: 0, // variable - the current item the user actually has
+        displayed: 0, // variable - the item displayed (part of animation)
+        frame: 0 // variable - the current frame
+      }
+    };
+
+    /*
 	Ball Class:
 	
 	Properties:
@@ -430,138 +433,138 @@ function game() {
 	fadeFrame - variable - incremented frame number (0 to 60)
 	fadeFrameTotal - consant - number of frames for respawning
 	*/
-	function Ball(copy) {
-		if (copy) {
-			this.x = system.balls.data[system.balls.data.length - 1].x;
-			this.y = system.balls.data[system.balls.data.length - 1].y;
-			this.dx = system.balls.data[system.balls.data.length - 1].dx;
-			this.dy = system.balls.data[system.balls.data.length - 1].dy;
-			this.fadeFrame = 8;
-			this.fadeFrameTotal = 8;
-		} else {
-			this.x = 50;
-			this.y = 5;
-			this.dx = 0;
-			this.dy = 0;
-			this.fadeFrame = 60;
-			this.fadeFrameTotal = 60;
-		}
-		this.direction = 0;
-		this.colliding = false;
-		this.cooldown = 0;
-		this.gravity = -0.05;
-		this.size = 3.5;
-		this.bounciness = 2.2;
-		this.fadeIn = true;
-	}
-	
-	// Variables for the game's intro
-	var intro = {
-		messages: ["can you beat the highscore?"],
-		currentMsg: 0, // msg num currently displayed, if messages.length > 1
-		msgPos: 0, // variable - x position (0 to 100)
-		msgOpacity: 0, // variable - transparency (0 - clear to 100 - opaque)
-		frame: 1 // frames for animation (1 to 180)
-	};
-	
-	// Variables for the game's title screen
-	var title = {
-		frame: 0, // frames for animation (1 to 60)
-		titleOpacity: 0, // variable - transparency (0 - clear to 100 - opaque)
-		buttonOpacity: 0 // variable - transparency ""
-	};
-	
-	// Variables for the game's instruction screen
-	var instructions = {
-		unpressed: false, // variable - if the button has been unpressed
-						  // since entering the menu
-		repressed: false, // variable - if the button has been repressed
-						  // since being unpressed
-		reunpressed: false
-	};
-	
-	// ***************
-	// BASIC GAME LOOP
-	// ***************
-	
-	/*
+    function Ball(copy) {
+      if (copy) {
+        this.x = system.balls.data[system.balls.data.length - 1].x;
+        this.y = system.balls.data[system.balls.data.length - 1].y;
+        this.dx = system.balls.data[system.balls.data.length - 1].dx;
+        this.dy = system.balls.data[system.balls.data.length - 1].dy;
+        this.fadeFrame = 8;
+        this.fadeFrameTotal = 8;
+      } else {
+        this.x = 50;
+        this.y = 5;
+        this.dx = 0;
+        this.dy = 0;
+        this.fadeFrame = 60;
+        this.fadeFrameTotal = 60;
+      }
+      this.direction = 0;
+      this.colliding = false;
+      this.cooldown = 0;
+      this.gravity = -0.05;
+      this.size = 3.5;
+      this.bounciness = 2.2;
+      this.fadeIn = true;
+    }
+
+    // Variables for the game's intro
+    var intro = {
+      messages: ["can you beat the highscore?"],
+      currentMsg: 0, // msg num currently displayed, if messages.length > 1
+      msgPos: 0, // variable - x position (0 to 100)
+      msgOpacity: 0, // variable - transparency (0 - clear to 100 - opaque)
+      frame: 1 // frames for animation (1 to 180)
+    };
+
+    // Variables for the game's title screen
+    var title = {
+      frame: 0, // frames for animation (1 to 60)
+      titleOpacity: 0, // variable - transparency (0 - clear to 100 - opaque)
+      buttonOpacity: 0 // variable - transparency ""
+    };
+
+    // Variables for the game's instruction screen
+    var instructions = {
+      unpressed: false, // variable - if the button has been unpressed
+      // since entering the menu
+      repressed: false, // variable - if the button has been repressed
+      // since being unpressed
+      reunpressed: false
+    };
+
+    // ***************
+    // BASIC GAME LOOP
+    // ***************
+
+    /*
 	The main "loop" of this game that keeps everything going is the loop
 	gameLoop() which repeats with the use of the variable clock.
 	
 	Within it, there are two parts: update() for game logic, and draw()
 	for rendering everything on the canvas.
 	*/
-	
-	var setfps = 60; // this is the intended fps that the game is set to
-	var currentfps = 0; // this displays the FPS the game is being rendered at
-	var fpsFilter = 50; // this determines how many frames to average
-	var clock = setInterval(gameLoop, 1000 / setfps);
-	var thisLoop;
-	var lastLoop = new Date;
-	var thisFrameFPS;
-	
-	var pauseFrames = 0;
-	var paused = false;
-	var pauseReleased = false;
-	
-	function gameLoop() {
-		
-		if (!paused) {
-			update();
-		}
-		draw();
-		
-		var thisLoop = new Date;
-		if (thisLoop - lastLoop === 0) {
-			thisFrameFPS = 60;
-			// Fallback to prevent "NaN" fps
-		} else {
-			thisFrameFPS = 1000 / (thisLoop - lastLoop);
-		}
-		currentfps += (thisFrameFPS - currentfps) / fpsFilter;
-		lastLoop = thisLoop;
-		
-		pauseFrames++;
-		if (!controls.space && !ioscontrols.tapping) {
-			pauseReleased = true;
-		}
-		if (!paused) {
-			if (isiOS && ioscontrols.tapping && system.stage === 3 && pauseReleased) {
-				if (pauseFrames > 30) {
-					pauseFrames = 1;
-					pauseReleased = false;
-				} else {
-					paused = true;
-					pauseReleased = false;
-				}
-			}
-			if (!isiOS && controls.space && system.stage === 3 && pauseReleased) {
-				paused = true;
-				pauseReleased = false;
-			}
-		} else {
-			if (isiOS && ioscontrols.tapping && system.stage === 3 && pauseReleased) {
-				if (pauseFrames > 30) {
-					pauseFrames = 1;
-					pauseReleased = false;
-				} else {
-					paused = false;
-					pauseReleased = false;
-				}
-			}
-			if (!isiOS && controls.space && system.stage === 3 && pauseReleased) {
-				paused = false;
-				pauseReleased = false;
-			}
-		}
-		
-	}
-	
-	// *******
-	// Cookies
-	// *******
-	
-	/*
+
+    var setfps = 60; // this is the intended fps that the game is set to
+    var currentfps = 0; // this displays the FPS the game is being rendered at
+    var fpsFilter = 50; // this determines how many frames to average
+    var clock = setInterval(gameLoop, 1000 / setfps);
+    var thisLoop;
+    var lastLoop = new Date();
+    var thisFrameFPS;
+
+    var pauseFrames = 0;
+    var paused = false;
+    var pauseReleased = false;
+
+    function gameLoop() {
+
+      if (!paused) {
+        update();
+      }
+      draw();
+
+      thisLoop = new Date();
+      if (thisLoop - lastLoop === 0) {
+        thisFrameFPS = 60;
+        // Fallback to prevent "NaN" fps
+      } else {
+        thisFrameFPS = 1000 / (thisLoop - lastLoop);
+      }
+      currentfps += (thisFrameFPS - currentfps) / fpsFilter;
+      lastLoop = thisLoop;
+
+      pauseFrames++;
+      if (!controls.space && !ioscontrols.tapping) {
+        pauseReleased = true;
+      }
+      if (!paused) {
+        if (isiOS && ioscontrols.tapping && system.stage === 3 && pauseReleased) {
+          if (pauseFrames > 30) {
+            pauseFrames = 1;
+            pauseReleased = false;
+          } else {
+            paused = true;
+            pauseReleased = false;
+          }
+        }
+        if (!isiOS && controls.space && system.stage === 3 && pauseReleased) {
+          paused = true;
+          pauseReleased = false;
+        }
+      } else {
+        if (isiOS && ioscontrols.tapping && system.stage === 3 && pauseReleased) {
+          if (pauseFrames > 30) {
+            pauseFrames = 1;
+            pauseReleased = false;
+          } else {
+            paused = false;
+            pauseReleased = false;
+          }
+        }
+        if (!isiOS && controls.space && system.stage === 3 && pauseReleased) {
+          paused = false;
+          pauseReleased = false;
+        }
+      }
+
+    }
+
+    // *******
+    // Cookies
+    // *******
+
+    /*
 	To keep the scores between sessions, I use javascript cookies that are
 	stored in the browser. They can be easily retrieved and updated. For my
 	purposes, I have a createCookie() function which creates a cookie for the
@@ -573,90 +576,95 @@ function game() {
 	
 	Resource: http://www.elated.com/articles/javascript-and-cookies/
 	*/
-	
-	var createCookie = function() {
-		
-		var currentHigh = getCookie();
-		if (currentHigh) {
-			document.cookie = "score=" + escape(currentHigh) + "; expires = Thu, 01 Jan 1970 00:00:01 GMT; path=/";
-		}
-		date = new Date();
-		date.setDate(date.getDate() + 365); // Adds one year
-		document.cookie = "score=" + escape(system.score.high) + "; expires = " + date.toGMTString() + "; path=/";
-		
-	}
-	
-	var getCookie = function() {
-		var cookie = document.cookie.match('(^|;) ?score=([^;]*)(;|$)');
-		if (cookie) {
-			return unescape(cookie[2]);
-		} else {
-			return null;
-		}
-	}
-	
-	if (getCookie() !== null) {
-		system.score.high = getCookie();
-	}
-	
-	// **************
-	// Math functions
-	// **************
-	
-	/*
+
+    var createCookie = function () {
+
+      var currentHigh = getCookie();
+      if (currentHigh) {
+        document.cookie = "score=" + escape(currentHigh) + "; expires = Thu, 01 Jan 1970 00:00:01 GMT; path=/";
+      }
+      var date = new Date();
+      date.setDate(date.getDate() + 365); // Adds one year
+      document.cookie = "score=" + escape(system.score.high) + "; expires = " + date.toGMTString() + "; path=/";
+
+    };
+
+    var getCookie = function () {
+
+      var cookie = document.cookie.match('(^|;) ?score=([^;]*)(;|$)');
+      if (cookie) {
+        return unescape(cookie[2]);
+      } else {
+        return false;
+      }
+
+    };
+
+    if (getCookie()) {
+      system.score.high = getCookie();
+    }
+
+    // **************
+    // Math functions
+    // **************
+
+    /*
 	Some mathematical functions are used in my game that aren't natively
 	included in javscript - such as conversions from degrees to radians, and
 	other functions. To keep these methods easily accessible throughout the
 	program (in both the update() and render() functions), I included them in
 	an object named mathx (to avoid confusion with Math).
 	*/
-	
-	var mathx = {};
-	
-	// Converts radians to degrees
-	mathx.toDegrees = function(rad) {
-		return ((rad * 180) / Math.PI);
-	};
-	
-	// Converts degrees to radians
-	mathx.toRadians = function(deg) {
-		return ((deg * Math.PI) / 180);
-	};
-	
-	// Determines the distance between two coordinates
-	mathx.distance = function(x1, y1, x2, y2) {
-		return Math.sqrt(((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1)));
-	};
-	
-	/*
+
+    var mathx = {};
+
+    // Converts radians to degrees
+    mathx.toDegrees = function (rad) {
+      return ((rad * 180) / Math.PI);
+    };
+
+    // Converts degrees to radians
+    mathx.toRadians = function (deg) {
+      return ((deg * Math.PI) / 180);
+    };
+
+    // Determines the distance between two coordinates
+    mathx.distance = function (x1, y1, x2, y2) {
+      return Math.sqrt(((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1)));
+    };
+
+    /*
 	Rotates a given number of radians counterclockwise around a center point
 	See https://en.wikipedia.org/wiki/Rotation_(mathematics) for more info
 	Based on this code: http://stackoverflow.com/questions/3162643/proper-trigonometry-for-rotating-a-point-around-the-origin
 	*/
-	
-	mathx.rotatePoint = function(cx, cy, angle, px, py) {
-		var s = Math.sin(angle);
-		var c = Math.cos(angle);
-		
-		px -= cx;
-		py -= cy;
-		
-		var xnew = px * c - py * s;
-		var ynew = px * s + py * c;
-		
-		var pxnew = xnew + cx;
-		var pynew = ynew + cy;
-		
-		return {x: pxnew, y: pynew};
-	};
-	
-	function update() {
-		
-		// ****************
-		// 0 - Introduction
-		// ****************
-		
-		/*
+
+    mathx.rotatePoint = function (cx, cy, angle, px, py) {
+      var s = Math.sin(angle);
+      var c = Math.cos(angle);
+
+      px -= cx;
+      py -= cy;
+
+      var xnew = px * c - py * s;
+      var ynew = px * s + py * c;
+
+      var pxnew = xnew + cx;
+      var pynew = ynew + cy;
+
+      return {
+        x: pxnew,
+        y: pynew
+      };
+    };
+
+    function update() {
+
+      // ****************
+      // 0 - Introduction
+      // ****************
+
+      /*
 		To animate the intro, a frame counter is used which increments each
 		game loop. In this case, the intro animation displaying a custom
 		message is three seconds long, and since the game plays at 60 FPS,
@@ -672,41 +680,41 @@ function game() {
 		in the bottom-right corner to notify the user that they can skip the
 		introduction by pressing space or tapping the screen.
 		*/
-		
-		if (system.stage === 0) {
-			intro.frame++;
-			if (intro.frame < 30) {
-				intro.msgPos = (intro.frame / 30) * 40;
-				intro.msgOpacity = (intro.frame / 30) * 100;
-			} else if (intro.frame >= 30 && intro.frame < 150) {
-				intro.msgPos = (((intro.frame - 30) / 120) * 20) + 40;
-				intro.msgOpacity = 100;
-			} else if (intro.frame >= 150 && intro.frame < 180) {
-				intro.msgPos = (((intro.frame - 150) / 30) * 40) + 60;
-				intro.msgOpacity = ((180 - intro.frame) / 30) * 100
-			} else if (intro.frame === 180) {
-				intro.msgOpacity = 0;
-				intro.msgPos = 100;
-				if (intro.currentMsg + 1 === intro.messages.length) {
-					system.stage = 1;
-				} else {
-					intro.currentMsg++;
-					intro.frame = 0;
-				}
-			}
-			
-			if (system.score.high > 10) { // if the user has played before
-				if (controls.space || ioscontrols.tapping) {
-					system.stage = 1; 
-				}
-			}
-		}
-		
-		// ***************
-		// 1 - Menu Screen
-		// ***************
-		
-		/*
+
+      if (system.stage === 0) {
+        intro.frame++;
+        if (intro.frame < 30) {
+          intro.msgPos = (intro.frame / 30) * 40;
+          intro.msgOpacity = (intro.frame / 30) * 100;
+        } else if (intro.frame >= 30 && intro.frame < 150) {
+          intro.msgPos = (((intro.frame - 30) / 120) * 20) + 40;
+          intro.msgOpacity = 100;
+        } else if (intro.frame >= 150 && intro.frame < 180) {
+          intro.msgPos = (((intro.frame - 150) / 30) * 40) + 60;
+          intro.msgOpacity = ((180 - intro.frame) / 30) * 100;
+        } else if (intro.frame === 180) {
+          intro.msgOpacity = 0;
+          intro.msgPos = 100;
+          if (intro.currentMsg + 1 === intro.messages.length) {
+            system.stage = 1;
+          } else {
+            intro.currentMsg++;
+            intro.frame = 0;
+          }
+        }
+
+        if (system.score.high > 10) { // if the user has played before
+          if (controls.space || ioscontrols.tapping) {
+            system.stage = 1;
+          }
+        }
+      }
+
+      // ***************
+      // 1 - Menu Screen
+      // ***************
+
+      /*
 		To animate the menu screen, a frame counter is used which increments
 		each game loop. In this case, the title appears via an opacity effect
 		after half a second, and the button / start text appears after another
@@ -715,11 +723,11 @@ function game() {
 		To start the game, either the space bar must be pressed (for desktop
 		players) or the screen must be tapped (for iOS users).
 		*/
-		
-		if (system.stage === 1) {
-			title.frame++;
-			if (title.frame < 30) {
-				/*
+
+      if (system.stage === 1) {
+        title.frame++;
+        if (title.frame < 30) {
+          /*
 				Code used for playing music - commented out since it isn't used
 				right now.
 				
@@ -727,29 +735,29 @@ function game() {
 					play("The Cannery");
 				}
 				*/
-				title.titleOpacity = (title.frame / 30) * 100;
-				title.buttonOpacity = 0;
-			} else if (title.frame >= 30 && title.frame < 60) {
-				title.titleOpacity = 100;
-				title.buttonOpacity = ((title.frame - 30) / 30) * 100;
-			} else if (title.frame === 60) {
-				title.titleOpacity = 100;
-				title.buttonOpacity = 100;
-			} else if (title.frame > 60) {
-				if (!isiOS && controls.space === true) {
-					system.stage = 2;
-				}
-				if (isiOS && ioscontrols.tapping === true) {
-					system.stage = 2;
-				}
-			}
-		}
-		
-		// ****************
-		// 2 - Instructions
-		// ****************
-		
-		/*
+          title.titleOpacity = (title.frame / 30) * 100;
+          title.buttonOpacity = 0;
+        } else if (title.frame >= 30 && title.frame < 60) {
+          title.titleOpacity = 100;
+          title.buttonOpacity = ((title.frame - 30) / 30) * 100;
+        } else if (title.frame === 60) {
+          title.titleOpacity = 100;
+          title.buttonOpacity = 100;
+        } else if (title.frame > 60) {
+          if (!isiOS && controls.space === true) {
+            system.stage = 2;
+          }
+          if (isiOS && ioscontrols.tapping === true) {
+            system.stage = 2;
+          }
+        }
+      }
+
+      // ****************
+      // 2 - Instructions
+      // ****************
+
+      /*
 		The instructions screen is not currently animated, though it may be
 		in the future.
 		
@@ -758,46 +766,57 @@ function game() {
 		the button or tap must still be unpressed. Once this is done, then the
 		button or tap can be repressed to start the game.
 		*/
-		
-		if (system.stage === 2) {
-			if (instructions.unpressed === false) {
-				if (!isiOS && controls.space === false) {
-					instructions.unpressed = true;
-				}
-				if (isiOS && ioscontrols.tapping === false) {
-					instructions.unpressed = true;
-				}
-			} else if (instructions.unpressed) {
-				if (!isiOS && controls.space === true) {
-					instructions.repressed = true;
-				}
-				if (isiOS && ioscontrols.tapping === true) {
-					instructions.repressed = true;
-				}
-			}
-			if (instructions.repressed) {
-				if (!isiOS && controls.space === false) {
-					instructions.reunpressed = true;
-					system.stage = 3;
-				}
-				if (isiOS && ioscontrols.tapping === false) {
-					instructions.reunpressed = true;
-					system.stage = 3;
-				}
-			}
-		}
-		
-		// *************
-		// 3 - Main Game
-		// *************
-		
-		if (system.stage === 3) {
-			
-			// *************
-			// Score updates
-			// *************
-			
-			/*
+
+      if (system.stage === 2) {
+        if (instructions.unpressed === false) {
+          if (!isiOS && controls.space === false) {
+            instructions.unpressed = true;
+          }
+          if (isiOS && ioscontrols.tapping === false) {
+            instructions.unpressed = true;
+          }
+        } else if (instructions.unpressed) {
+          if (!isiOS && controls.space === true) {
+            instructions.repressed = true;
+          }
+          if (isiOS && ioscontrols.tapping === true) {
+            instructions.repressed = true;
+          }
+        }
+        if (instructions.repressed) {
+          if (!isiOS && controls.space === false) {
+            instructions.reunpressed = true;
+            system.stage = 3;
+          }
+          if (isiOS && ioscontrols.tapping === false) {
+            instructions.reunpressed = true;
+            system.stage = 3;
+          }
+        }
+      }
+
+      // *************
+      // 3 - Main Game
+      // *************
+
+      if (system.stage === 3) {
+
+        // ************
+        // Shake update
+        // ************
+
+        if (system.shake > 0) {
+          system.shake++;
+          if (system.shake > 7) {
+            system.shake = 0;
+          }
+        }
+
+        // *************
+        // Score updates
+        // *************
+
+        /*
 			The system.score.frames attribute determines the opacity of the
 			large score in display on the background of the game - so as the
 			score increases (and the variable returns to 60 each time), the
@@ -810,25 +829,25 @@ function game() {
 			updateHighScore() is called in the program under the ball updates
 			section.
 			*/
-			
-			if (system.score.frame > 0) {
-				system.score.frame -= 1;
-			}
-			
-			if (system.score.HSframe > 0) {
-				system.score.HSframe -= 1;
-			}
-			
-			var updateHighScore = function() {
-				system.score.high = system.score.current;
-				system.score.HSframe = system.score.HSlength;
-			};
-			
-			// *****************
-			// Character updates
-			// *****************
-			
-			/*
+
+        if (system.score.frame > 0) {
+          system.score.frame -= 1;
+        }
+
+        if (system.score.HSframe > 0) {
+          system.score.HSframe -= 1;
+        }
+
+        var updateHighScore = function () {
+          system.score.high = system.score.current;
+          system.score.HSframe = system.score.HSlength;
+        };
+
+        // *****************
+        // Character updates
+        // *****************
+
+        /*
 			Controlling the character depends based on whether you are playing
 			on iOS or desktop.
 			
@@ -846,29 +865,30 @@ function game() {
 			appropriately, as well as your x velocity being partially averaged
 			with that of the ball (again, to make the game seemingly easier).
 			*/
-			
-			if (isiOS) {
-				
-				var iOSMoveCharacter = function() {
-					
-					var charx = system.character.x;
-					var ballx = system.balls.avgBallX;
-					if (ioscontrols.orientation === 0) {
-						var tiltx = (ioscontrols.xaccel + 3) * 15;
-					} else if (ioscontrols.orientation === 90) {
-						var tiltx = ((0 - ioscontrols.yaccel) + 3) * 15;
-					} else if (ioscontrols.orientation === -90) {
-						var tiltx = (ioscontrols.yaccel + 3) * 15;
-					} else if (ioscontrols.orientation === 180) {
-						var tiltx = ((0 - ioscontrols.xaccel) + 3) * 15;
-					}
-					system.character.x = ((charx * 13) + ballx + tiltx) / 15;
-					
-				};
-				
-				iOSMoveCharacter();
-				
-				/*
+
+        if (isiOS) {
+
+          var iOSMoveCharacter = function () {
+
+            var charx = system.character.x;
+            var ballx = system.balls.avgBallX;
+            var tiltx;
+            if (ioscontrols.orientation === 0) {
+              tiltx = (ioscontrols.xaccel + 3) * 15;
+            } else if (ioscontrols.orientation === 90) {
+              tiltx = ((0 - ioscontrols.yaccel) + 3) * 15;
+            } else if (ioscontrols.orientation === -90) {
+              tiltx = (ioscontrols.yaccel + 3) * 15;
+            } else if (ioscontrols.orientation === 180) {
+              tiltx = ((0 - ioscontrols.xaccel) + 3) * 15;
+            }
+            system.character.x = ((charx * 13) + ballx + tiltx) / 15;
+
+          };
+
+          iOSMoveCharacter();
+
+          /*
 				Directly controlling the character by its x velocity tends to
 				be too difficult / impractical.
 				
@@ -881,119 +901,135 @@ function game() {
 				system.character.dx *= system.character.friction;
 				system.character.x += system.character.dx;
 				*/
-				
-			} else {
-			
-				if (controls.right === true) {
-					system.character.dx += system.character.speed;
-					system.character.x = ((system.character.x * 29) + system.balls.avgBallX) / 30;
-				}
-				if (controls.left === true) {
-					system.character.dx -= system.character.speed;
-					system.character.x = ((system.character.x * 29) + system.balls.avgBallX) / 30;
-				}
-				system.character.dx *= system.character.friction;
-				system.character.x += system.character.dx;
-				
-			}
-			
-			/*
+
+        } else {
+
+          if (controls.right === true) {
+            system.character.dx += system.character.speed;
+            system.character.x = ((system.character.x * 29) + system.balls.avgBallX) / 30;
+          }
+          if (controls.left === true) {
+            system.character.dx -= system.character.speed;
+            system.character.x = ((system.character.x * 29) + system.balls.avgBallX) / 30;
+          }
+          system.character.dx *= system.character.friction;
+          system.character.x += system.character.dx;
+
+        }
+
+        /*
 			To make sure the character doesn't go outside of the bounds of the
 			screen, we have some if conditionals that reset the x position
 			appropriately when that happens.
 			*/
-			
-			if (system.character.x > 100) {
-				system.character.x = 100;
-			}
-			if (system.character.x < 0) {
-				system.character.x = 0;
-			}
-			
-			// ************
-			// Ball updates
-			// ************
-			
-			/*
+
+        if (system.character.x > 100) {
+          system.character.x = 100;
+        }
+        if (system.character.x < 0) {
+          system.character.x = 0;
+        }
+
+        // ************
+        // Ball updates
+        // ************
+
+        /*
 			Determines the values of system.balls.avgBallX and
 			system.balls.avgBallY;
 			*/
-			
-			if (system.balls.data.length > 0) {
-				var totalX = 0;
-				var totalY = 0;
-				var totalBalls = system.balls.data.length
-				for (i = 0; i < totalBalls; i++) {
-					totalX += system.balls.data[i].x;
-					totalY += system.balls.data[i].y;
-				}
-				system.balls.avgBallX = totalX / totalBalls;
-				system.balls.avgBallY = totalY / totalBalls;
-			}
-			
-			/*
+
+        if (system.balls.data.length > 0) {
+          var totalX = 0;
+          var totalY = 0;
+          var totalBalls = system.balls.data.length;
+          var i;
+          for (i = 0; i < totalBalls; i++) {
+            totalX += system.balls.data[i].x;
+            totalY += system.balls.data[i].y;
+          }
+          system.balls.avgBallX = totalX / totalBalls;
+          system.balls.avgBallY = totalY / totalBalls;
+        }
+
+        /*
 			The ball's location and physics and such should not update if the
 			ball is still "fading in" or respawning. This way the player has
 			time to recenter their paddle if they are using the iPad version
 			of the game.
 			*/
-			
-			for (i = 0; i < system.balls.data.length; i++) {
-			
-			if (system.balls.data[i].fadeIn) {
-				
-				system.balls.data[i].fadeFrame--;
-				if (system.balls.data[i].fadeFrame === 0) {
-					system.balls.data[i].fadeIn = false;
-				}
-				
-			} else {
-			
-			/*
+
+        var i;
+        for (i = 0; i < system.balls.data.length; i++) {
+
+          if (system.balls.data[i].fadeIn) {
+
+            system.balls.data[i].fadeFrame--;
+            if (system.balls.data[i].fadeFrame === 0) {
+              system.balls.data[i].fadeIn = false;
+            }
+
+          } else {
+
+            /*
 			This changes the ball's y velocity according to the set gravity,
 			and then changes the ball's x and y position based on it's x and y
 			velocities as well as the game speed (which increases when your
 			score gets higher, as a form of added difficulty).
 			*/
-			
-			system.balls.data[i].dy += system.balls.data[i].gravity;
-			
-			system.balls.data[i].x += system.balls.data[i].dx * system.gameSpeed;
-			system.balls.data[i].y -= system.balls.data[i].dy * system.gameSpeed;
-			
-			/*
+
+            system.balls.data[i].dy += system.balls.data[i].gravity;
+
+            system.balls.data[i].x += system.balls.data[i].dx * system.gameSpeed;
+            system.balls.data[i].y -= system.balls.data[i].dy * system.gameSpeed;
+
+            /*
 			These if statements check to see if the ball has hit the wall -
 			if so, then the ball's x position is reset and the x velocity is
 			inverted.
 			*/
-			
-			if (system.balls.data[i].x > (100 - (system.balls.data[i].size * 0.8))) {
-				system.balls.data[i].x = (100 - (system.balls.data[i].size * 0.8));
-				system.balls.data[i].dx *= -1;
-			}
-			
-			if (system.balls.data[i].x < (system.balls.data[i].size * 0.8)) {
-				system.balls.data[i].x = (system.balls.data[i].size * 0.8);
-				system.balls.data[i].dx *= -1;
-			}
-			
-			/*
+
+            if (system.balls.data[i].x > (100 - (system.balls.data[i].size * 0.8))) {
+              system.balls.data[i].x = (100 - (system.balls.data[i].size * 0.8));
+              system.balls.data[i].dx *= -1;
+            }
+
+            if (system.balls.data[i].x < (system.balls.data[i].size * 0.8)) {
+              system.balls.data[i].x = (system.balls.data[i].size * 0.8);
+              system.balls.data[i].dx *= -1;
+            }
+
+            /*
+			This makes the ball follow the character directly if the magnet
+			item is activated.
+			*/
+
+            if (system.itemDisplay.current === 4) {
+              system.balls.data[i].x = system.character.x;
+              if (system.itemDisplay.frame === 1) {
+                system.balls.data[i].dx = system.character.dx;
+              } else {
+                system.balls.data[i].dx = 0;
+              }
+            }
+
+            /*
 			When the ball falls off the screen, the ball is removed from the
 			array of balls. The iterator (i) has to be decremented to
 			compensate for the removed item (or else one of the balls won't
 			update).
 			*/
-			
-			if (system.balls.data[i].y > 75) {
-				system.balls.data.splice(i, 1);
-				i--;
-			}
-			
-			}
-			
-			}
-			
-			/*
+
+            if (system.balls.data[i].y > 75) {
+              system.balls.data.splice(i, 1);
+              i--;
+            }
+
+          }
+
+        }
+
+        /*
 			This updates the game when the ball reaches the bottom of the
 			screen (aka death). A number of things happens:
 			- gameSpeed is reset to 1 (normal speed)
@@ -1007,8 +1043,8 @@ function game() {
 			- the current score is reset to 0
 			- the fade in / respawn sequence is started for iOS players
 			*/
-			
-			/*
+
+        /*
 			if (system.ball.y > 75) {
 				system.gameSpeed = 1;
 				system.ball.x = 50;
@@ -1029,30 +1065,30 @@ function game() {
 				system.score.current = 0;
 			}
 			*/
-			
-			if (system.balls.data.length === 0) {
-				system.gameSpeed = 1;
-				system.balls.data.push(new Ball);
-				system.paddle.tilt = 90;
-				/*
+
+        if (system.balls.data.length === 0) {
+          system.gameSpeed = 1;
+          system.balls.data.push(new Ball());
+          system.paddle.tilt = 90;
+          /*
 				Reset's the character's position - not sure if necessary
 				if (!isiOS) {
 					system.character.x = 50;
 					system.character.dx = 0;
 				}
 				*/
-				if (system.score.current > system.score.high) {
-					updateHighScore();
-					createCookie();
-				}
-				system.score.current = 0;
-			}
-			
-			// *************
-			// Paddle updates
-			// *************
-			
-			/*
+          if (system.score.current > system.score.high) {
+            updateHighScore();
+            createCookie();
+          }
+          system.score.current = 0;
+        }
+
+        // *************
+        // Paddle updates
+        // *************
+
+        /*
 			Originally the paddle on the character could be adjusted with
 			the up and down arrow keys - and while this did work, it did find
 			itself to be somewhat difficult for some people. So while I added
@@ -1070,70 +1106,70 @@ function game() {
 				...
 			}
 			*/
-			
-			var updatePaddle = function() {
-			
-				/*
+
+        var updatePaddle = function () {
+
+          /*
 				The targetY is set to a Y position so that if it is greater
 				than 30 units, then it will count as if it is less than 30
 				based on its absolute value. This way if the target is low,
 				then the paddle won't tilt very sharply to reach it - rather
 				it will tilt more upwards to help you instead.
 				*/
-				
-				targetX = system.target.x;
-				targetY = 30 - Math.abs(system.target.y - 30);
-				paddleX = system.character.x;
-				paddleY = 58; // the height of the paddle remains constant
-				toTarget = mathx.toDegrees(Math.atan((targetY - paddleY) / (targetX - paddleX)));
-				
-				// This prevents problems with a negative paddle tilt
-				if (toTarget < 0) {
-					toTarget += 180;
-				}
-				
-				ballX = system.balls.avgBallX;
-				ballY = system.balls.avgBallY;
-				
-				toBall = mathx.toDegrees(Math.atan((ballY - paddleY) / (ballX - paddleX)));
-				
-				if (toBall < 0) {
-					toBall += 180;
-				}
-				
-				/*
+
+          var targetX = system.target.x;
+          var targetY = 30 - Math.abs(system.target.y - 30);
+          var paddleX = system.character.x;
+          var paddleY = 58; // the height of the paddle remains constant
+          var toTarget = mathx.toDegrees(Math.atan((targetY - paddleY) / (targetX - paddleX)));
+
+          // This prevents problems with a negative paddle tilt
+          if (toTarget < 0) {
+            toTarget += 180;
+          }
+
+          var ballX = system.balls.avgBallX;
+          var ballY = system.balls.avgBallY;
+
+          var toBall = mathx.toDegrees(Math.atan((ballY - paddleY) / (ballX - paddleX)));
+
+          if (toBall < 0) {
+            toBall += 180;
+          }
+
+          /*
 				Here you can see the final direction is an average of the
 				direction required to point to the ball and the direction
 				required to point to the target, and then moved a bit more to
 				90 degrees (up).
 				*/
-				
-				finalTilt = (toTarget + toBall) / 2;
-				finalTilt = ((finalTilt - 90) * 0.5) + 90;
-				
-				system.paddle.tilt = finalTilt;
-			};
-			
-			updatePaddle();
-			
-			/*
+
+          var finalTilt = (toTarget + toBall) / 2;
+          finalTilt = ((finalTilt - 90) * 0.5) + 90;
+
+          system.paddle.tilt = finalTilt;
+        };
+
+        updatePaddle();
+
+        /*
 			This prevents the paddle from tilting too far from the left or
 			right, although it shouldn't really be much of a problem with the
 			auto tilting.
 			*/
-			
-			if (system.paddle.tilt > 180) {
-				system.paddle.tilt = 180;
-			}
-			if (system.paddle.tilt < 0) {
-				system.paddle.tilt = 0;
-			}
-			
-			// *******************
-			// Collision detection
-			// *******************
-			
-			/*
+
+        if (system.paddle.tilt > 180) {
+          system.paddle.tilt = 180;
+        }
+        if (system.paddle.tilt < 0) {
+          system.paddle.tilt = 0;
+        }
+
+        // *******************
+        // Collision detection
+        // *******************
+
+        /*
 			The only collision in the game that is somewhat difficult is the
 			collision between the paddle and the ball - other collisions like
 			between the ball and the target are simple since they just use the
@@ -1156,42 +1192,42 @@ function game() {
 			it reaches 0, so as long as it is greater than 0, another collision
 			cannot be detected.
 			*/
-			
-			var ballCollision = function(num) {
-				
-				// The collision detection system first assumes that there is
-				// no collision, and changes the boolean if necessary:
-				
-				system.balls.data[num].colliding = false;
-				
-				if (system.balls.data[num].cooldown > 0) {
-				
-					system.balls.data[num].cooldown--;
-					
-				} else {
-					
-					/*
+
+        var ballCollision = function (num) {
+
+          // The collision detection system first assumes that there is
+          // no collision, and changes the boolean if necessary:
+
+          system.balls.data[num].colliding = false;
+
+          if (system.balls.data[num].cooldown > 0) {
+
+            system.balls.data[num].cooldown--;
+
+          } else {
+
+            /*
 					An array of the coordinates of the paddle's collision box
 					assuming it is tilted upwards - x is relative to the
 					character, y is based on the grid.
 					*/
-					
-					var collpoints = [	-8, 56,
-										-4, 56,
-										0, 56,
-										4, 56,
-										8, 56];
-										
-					// The center of rotation for the paddle
-					
-					var centerx = system.character.x;
-					var centery = 62;
-					
-					var ballx = system.balls.data[num].x;
-					var bally = system.balls.data[num].y;
-					var ballsize = system.balls.data[num].size;
-					
-					/*
+
+            var collpoints = [-8, 56,
+          -4, 56,
+          0, 56,
+          4, 56,
+          8, 56];
+
+            // The center of rotation for the paddle
+
+            var centerx = system.character.x;
+            var centery = 62;
+
+            var ballx = system.balls.data[num].x;
+            var bally = system.balls.data[num].y;
+            var ballsize = system.balls.data[num].size;
+
+            /*
 					For each of the collpoints, they calculate the correct
 					position of the point (which accounts for the tilt of the
 					paddle), and then check to see if the distance between the
@@ -1200,49 +1236,49 @@ function game() {
 					purposes to take into account for inaccuracies and other
 					close collisions.
 					*/
-					
-					var temp;
-					
-					temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + collpoints[0], collpoints[1]);
-					if (mathx.distance(temp.x, temp.y, ballx, bally) < ballsize + 1) {
-						system.balls.data[num].colliding = true;
-						system.balls.data[num].cooldown = 5;
-					}
-					temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + collpoints[2], collpoints[3]);
-					if (mathx.distance(temp.x, temp.y, ballx, bally) < ballsize + 1) {
-						system.balls.data[num].colliding = true;
-						system.balls.data[num].cooldown = 5;
-					}
-					temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + collpoints[4], collpoints[5]);
-					if (mathx.distance(temp.x, temp.y, ballx, bally) < ballsize + 1) {
-						system.balls.data[num].colliding = true;
-						system.balls.data[num].cooldown = 5;
-					}
-					temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + collpoints[6], collpoints[7]);
-					if (mathx.distance(temp.x, temp.y, ballx, bally) < ballsize + 1) {
-						system.balls.data[num].colliding = true;
-						system.balls.data[num].cooldown = 5;
-					}
-					temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + collpoints[8], collpoints[9]);
-					if (mathx.distance(temp.x, temp.y, ballx, bally) < ballsize + 1) {
-						system.balls.data[num].colliding = true;
-						system.balls.data[num].cooldown = 5;
-					}
-					
-				}
-				
-			}
-			
-			for (i = 0; i < system.balls.data.length; i++) {
-				ballCollision(i);
-			}
-			
-			// Calculates the direction of the balls, used for bouncing
-			for (i = 0; i < system.balls.data.length; i++) {
-				system.balls.data[i].direction = mathx.toDegrees(Math.atan2(system.balls.data[i].dy, system.balls.data[i].dx)) - 90;
-			}
-			
-			/*
+
+            var temp;
+
+            temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + collpoints[0], collpoints[1]);
+            if (mathx.distance(temp.x, temp.y, ballx, bally) < ballsize + 1) {
+              system.balls.data[num].colliding = true;
+              system.balls.data[num].cooldown = 5;
+            }
+            temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + collpoints[2], collpoints[3]);
+            if (mathx.distance(temp.x, temp.y, ballx, bally) < ballsize + 1) {
+              system.balls.data[num].colliding = true;
+              system.balls.data[num].cooldown = 5;
+            }
+            temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + collpoints[4], collpoints[5]);
+            if (mathx.distance(temp.x, temp.y, ballx, bally) < ballsize + 1) {
+              system.balls.data[num].colliding = true;
+              system.balls.data[num].cooldown = 5;
+            }
+            temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + collpoints[6], collpoints[7]);
+            if (mathx.distance(temp.x, temp.y, ballx, bally) < ballsize + 1) {
+              system.balls.data[num].colliding = true;
+              system.balls.data[num].cooldown = 5;
+            }
+            temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + collpoints[8], collpoints[9]);
+            if (mathx.distance(temp.x, temp.y, ballx, bally) < ballsize + 1) {
+              system.balls.data[num].colliding = true;
+              system.balls.data[num].cooldown = 5;
+            }
+
+          }
+
+        };
+
+        for (i = 0; i < system.balls.data.length; i++) {
+          ballCollision(i);
+        }
+
+        // Calculates the direction of the balls, used for bouncing
+        for (i = 0; i < system.balls.data.length; i++) {
+          system.balls.data[i].direction = mathx.toDegrees(Math.atan2(system.balls.data[i].dy, system.balls.data[i].dx)) - 90;
+        }
+
+        /*
 			The bounce function is used for when a collision is detected with
 			the ball and the paddle. It's worth noting that the direction the
 			ball goes in is not in fact "correct" in a realistic sense - the
@@ -1257,25 +1293,25 @@ function game() {
 			small amounts of velocity being lost over time which caused
 			problems.
 			*/
-			
-			var bounce = function(num, dir) {
-				// var speed = Math.sqrt(Math.pow(system.ball.dx, 2) + Math.pow(system.ball.dy, 2));
-				system.balls.data[num].direction = dir // + (dir - (180 - system.ball.direction));
-				system.balls.data[num].dx = system.balls.data[num].bounciness * (Math.sin(mathx.toRadians(system.balls.data[num].direction)));
-				system.balls.data[num].dy = system.balls.data[num].bounciness * (Math.cos(mathx.toRadians(system.balls.data[num].direction)));
-			};
-			
-			for (i = 0; i < system.balls.data.length; i++) {
-				if (system.balls.data[i].colliding) {
-					bounce(i, system.paddle.tilt - 90);
-				}
-			}
-			
-			// ****************
-			// Update particles
-			// ****************
-			
-			/*
+
+        var bounce = function (num, dir) {
+          // var speed = Math.sqrt(Math.pow(system.ball.dx, 2) + Math.pow(system.ball.dy, 2));
+          system.balls.data[num].direction = dir // + (dir - (180 - system.ball.direction));
+          system.balls.data[num].dx = system.balls.data[num].bounciness * (Math.sin(mathx.toRadians(system.balls.data[num].direction)));
+          system.balls.data[num].dy = system.balls.data[num].bounciness * (Math.cos(mathx.toRadians(system.balls.data[num].direction)));
+        };
+
+        for (i = 0; i < system.balls.data.length; i++) {
+          if (system.balls.data[i].colliding) {
+            bounce(i, system.paddle.tilt - 90);
+          }
+        }
+
+        // ****************
+        // Update particles
+        // ****************
+
+        /*
 			As an added visual effect, small white square "particles" explode
 			off the target when a point is scored. This serves as a form of
 			"eye candy" and gives the player a sense of reward and tangibility
@@ -1295,42 +1331,42 @@ function game() {
 			To avoid possible lag, a "max" number of particles is set to
 			prevent lag if many targets are hit in succession.
 			*/
-			
-			var generateParticles = function(targetx, targety) {
-				var i;
-				for (i = 1; i <= system.particles.perTarget; i++) {
-					if (system.particles.data.length < system.particles.max) {
-						var data = {};
-						data.x = targetx;
-						data.y = targety;
-						data.vx = (Math.random() - 0.5) * 3;
-						data.vy = Math.random() * -2;
-						system.particles.data.push(data);
-					}
-				}
-			}
-			
-			var updateParticles = function() {
-				var i;
-				for (i = 0; i < system.particles.data.length; i++) {
-					system.particles.data[i].vy += system.particles.gravity;
-					
-					system.particles.data[i].x += system.particles.data[i].vx;
-					system.particles.data[i].y += system.particles.data[i].vy;
-					
-					if (system.particles.data[i].y > 75) {
-						system.particles.data.splice(i, 1);
-					}
-				}
-			}
-			
-			updateParticles();
-			
-			// **************
-			// Target updates
-			// **************
-			
-			/*
+
+        var generateParticles = function (targetx, targety) {
+          var i;
+          for (i = 1; i <= system.particles.perTarget; i++) {
+            if (system.particles.data.length < system.particles.max) {
+              var data = {};
+              data.x = targetx;
+              data.y = targety;
+              data.vx = (Math.random() - 0.5) * 3;
+              data.vy = Math.random() * -2;
+              system.particles.data.push(data);
+            }
+          }
+        }
+
+        var updateParticles = function () {
+          var i;
+          for (i = 0; i < system.particles.data.length; i++) {
+            system.particles.data[i].vy += system.particles.gravity;
+
+            system.particles.data[i].x += system.particles.data[i].vx;
+            system.particles.data[i].y += system.particles.data[i].vy;
+
+            if (system.particles.data[i].y > 75) {
+              system.particles.data.splice(i, 1);
+            }
+          }
+        }
+
+        updateParticles();
+
+        // **************
+        // Target updates
+        // **************
+
+        /*
 			This if statement checks to see if the ball has hit the target
 			(based on the distance between them). If so, a number of things
 			will happen:
@@ -1350,42 +1386,43 @@ function game() {
 			possible for the target to still end up close to the ball, but
 			it should not be a major problem.
 			*/
-			
-			var targetCollision = function(num) {
-				if (mathx.distance(system.balls.data[num].x, system.balls.data[num].y, system.target.x, system.target.y) < (system.target.size + system.balls.data[num].size)) {
-					system.gameSpeed = 1 + (system.gameAccel * system.score.current);
-					system.balls.data[num].gravity = -0.05 - ((system.gameAccel * system.score.current) / 25);
-					if (system.itemDisplay.current === 2) {
-						system.score.current += 2;
-						generateParticles(system.target.x, system.target.y);
-					} else {
-						system.score.current += 1;
-					}
-					system.score.frame = 60;
-					generateParticles(system.target.x, system.target.y);
-					var x, y, i;
-					for (i = 0; i <= 10; i++) {
-						x = 20 + Math.round(Math.random() * 60);
-						y = 10 + Math.round(Math.random() * 35);
-						if (mathx.distance(system.balls.data[num].x, system.balls.data[num].y, system.target.x, system.target.y) > 30) {
-							i = 11;
-						}
-					}
-					system.target.x = x;
-					system.target.y = y;
-					system.firstFrame = true;
-				}
-			}
-			
-			for (i = 0; i < system.balls.data.length; i++) {
-				targetCollision(i);
-			}
-			
-			// ************
-			// Item updates
-			// ************
-			
-			/*
+
+        var targetCollision = function (num) {
+          if (mathx.distance(system.balls.data[num].x, system.balls.data[num].y, system.target.x, system.target.y) < (system.target.size + system.balls.data[num].size)) {
+            system.gameSpeed = 1 + (system.gameAccel * system.score.current);
+            system.balls.data[num].gravity = -0.05 - ((system.gameAccel * system.score.current) / 25);
+            if (system.itemDisplay.current === 2) {
+              system.score.current += 2;
+              generateParticles(system.target.x, system.target.y);
+            } else {
+              system.score.current += 1;
+            }
+            system.score.frame = 60;
+            system.shake = 1;
+            generateParticles(system.target.x, system.target.y);
+            var x, y, i;
+            for (i = 0; i <= 10; i++) {
+              x = 20 + Math.round(Math.random() * 60);
+              y = 10 + Math.round(Math.random() * 35);
+              if (mathx.distance(system.balls.data[num].x, system.balls.data[num].y, system.target.x, system.target.y) > 30) {
+                i = 11;
+              }
+            }
+            system.target.x = x;
+            system.target.y = y;
+            system.firstFrame = true;
+          }
+        }
+
+        for (i = 0; i < system.balls.data.length; i++) {
+          targetCollision(i);
+        }
+
+        // ************
+        // Item updates
+        // ************
+
+        /*
 			The IDs for different "items" in the game (system.item.current)
 			are as follows:
 			- 0: no item
@@ -1394,247 +1431,252 @@ function game() {
 			- 3: triple ball
 			- 4: magnet
 			*/
-			
-			var showItemBox = function() {
-				system.itemBox.direction = 45;
-				system.itemBox.appearing = true;
-				
-				var x, y, i, j, tooClose;
-				for (i = 0; i <= 10; i++) {
-					x = 20 + Math.round(Math.random() * 60);
-					y = 10 + Math.round(Math.random() * 35);
-					tooClose = false;
-					for (j = 0; j < system.balls.data.length; j++) {
-						if (mathx.distance(system.balls.data[j].x, system.balls.data[j].y, system.itemBox.x, system.itemBox.y) < 20) {
-							tooClose = true;
-						}
-					}
-					if (!tooClose) {
-						i = 11;
-					}
-				}
-				system.itemBox.x = x;
-				system.itemBox.y = y;
-			};
-			
-			var itemCollision = function(num) {
-				
-				var direction = system.itemBox.direction;
-				var itemx = system.itemBox.x;
-				var itemy = system.itemBox.y;
-				var ballx = system.balls.data[num].x;
-				var bally = system.balls.data[num].y;
-				var size = system.itemBox.size;
-				var ballsize = system.balls.data[num].size;
-				
-				var point1; // vertices of the square
-				var point2; // ...
-				var point3; // ...
-				var point4; // ...
-				var slope1; // slope of points 1 & 2 or 3 & 4
-				var slope2; // slope of ponits 1 & 3 or 2 & 4
-				var yint12; // y intereps of lines between given points
-				var yint13; // ...
-				var yint24; // ...
-				var yint34; // ...
-				
-				point1 = mathx.rotatePoint(itemx, itemy, mathx.toRadians(direction), itemx - ((0.5 * size) + ballsize), itemy - ((0.5 * size) + ballsize));
-				point2 = mathx.rotatePoint(itemx, itemy, mathx.toRadians(direction), itemx + ((0.5 * size) + ballsize), itemy - ((0.5 * size) + ballsize));
-				point3 = mathx.rotatePoint(itemx, itemy, mathx.toRadians(direction), itemx - ((0.5 * size) + ballsize), itemy + ((0.5 * size) + ballsize));
-				point4 = mathx.rotatePoint(itemx, itemy, mathx.toRadians(direction), itemx + ((0.5 * size) + ballsize), itemy + ((0.5 * size) + ballsize));
-				
-				// Assign slopes...
-				
-				if (point1.x === point2.x) {
-					slope1 = "undefined";
-				} else {
-					slope1 = ((point2.y - point1.y) / (point2.x - point1.x));
-				}
-				
-				if (point1.x === point3.x) {
-					slope2 = "undefined";
-				} else {
-					slope2 = ((point3.y - point1.y) / (point3.x - point1.x));
-				}
-				
-				// Assign y intercepts...
-				
-				if (slope1 === "undefined") {
-					yint12 = "undefined";
-					yint34 = "undefined";
-				} else {
-					yint12 = point1.y - (slope1 * point1.x);
-					yint34 = point3.y - (slope1 * point3.x);
-				}
-				
-				if (slope2 === "undefined") {
-					yint13 = "undefined";
-					yint24 = "undefined";
-				} else {
-					yint13 = point1.y - (slope2 * point1.x);
-					yint24 = point2.y - (slope2 * point2.x);
-				}
-				
-				// Check for collision on line from 1 to 2
-				
-				if (point1.x === point2.x) {
-					if (point1.y > point2.y) { // right side of the square
-						if (ballx > point1.x) {
-							return false;
-						}
-					} else { // left side of the square
-						if (ballx < point1.x) {
-							return false;
-						}
-					}
-				} else if (point1.x < point2.x) { // top side of the square
-					if (bally < yint12 + (slope1 * ballx)) {
-						return false;
-					}
-				} else if (point1.x > point2.x) { // bottom side of the square
-					if (bally > yint12 + (slope1 * ballx)) {
-						return false;
-					}
-				}
-				
-				// Check for collision on line from 3 to 4
-				
-				if (point3.x === point4.x) {
-					if (point3.y > point4.y) { // left side of the square
-						if (ballx < point3.x) {
-							return false;
-						}
-					} else { // right side of the square
-						if (ballx > point3.x) {
-							return false;
-						}
-					}
-				} else if (point3.x < point4.x) { // bottom side of the square
-					if (bally > yint34 + (slope1 * ballx)) {
-						return false;
-					}
-				} else if (point3.x > point4.x) { // top side of the square
-					if (bally < yint34 + (slope1 * ballx)) {
-						return false;
-					}
-				}
-				
-				// Check for collision on line from 1 to 3
-				
-				if (point1.x === point3.x) {
-					if (point1.y > point3.y) { // left side of the square
-						if (ballx < point1.x) {
-							return false;
-						}
-					} else { // right side of the square
-						if (ballx > point1.x) {
-							return false;
-						}
-					}
-				} else if (point1.x < point3.x) { // bottom side of the square
-					if (bally > yint13 + (slope2 * ballx)) {
-						return false;
-					}
-				} else if (point1.x > point3.x) { // top side of the square
-					if (bally < yint13 + (slope2 * ballx)) {
-						return false;
-					}
-				}
-				
-				// Check for collision on line from 2 to 4
-				
-				if (point2.x === point4.x) {
-					if (point2.y > point4.y) { // right side of the square
-						if (ballx > point2.x) {
-							return false;
-						}
-					} else { // left side of the square
-						if (ballx < point2.x) {
-							return false;
-						}
-					}
-				} else if (point2.x < point4.x) { // top side of the square
-					if (bally < yint24 + (slope2 * ballx)) {
-						return false;
-					}
-				} else if (point2.x > point4.x) { // bottom side of the square
-					if (bally > yint24 + (slope2 * ballx)) {
-						return false;
-					}
-				}
-				
-				return true;
-				
-			};
-			
-			// This rotates the item box
-			system.itemBox.direction += system.itemBox.turnSpeed;
-			if (system.itemBox.direction >= 360) {
-				system.itemBox.direction = 0;
-			}
-			
-			// This ensures the itembox resets upon death
-			if (system.score.current < 10) {
-				system.itemDisplay.displayed = 0;
-				system.itemDisplay.current = 0;
-				system.itemDisplay.frame = 0;
-				system.itemBox.appearing = false;
-			}
-			
-			if (system.score.current % 20 === 10 && system.firstFrame) {
-				showItemBox();
-			}
-			
-			var itemBoxCollided = false;
-			if (system.itemBox.appearing === true) {
-				for (i = 0; i < system.balls.data.length; i++) {
-					if (itemCollision(i)) {
-						itemBoxCollided = true;
-					}
-				}
-				if (itemBoxCollided) {
-					system.itemBox.appearing = false;
-					generateParticles(system.itemBox.x, system.itemBox.y);
-					system.itemDisplay.current = 1;
-					system.itemDisplay.displayed = 1;
-					system.itemDisplay.frame = 660;
-				}
-			}
-			
-			if (system.itemDisplay.frame > 0) {
-				system.itemDisplay.frame--;
-				if (system.itemDisplay.frame === 600) {
-					system.itemDisplay.current = Math.floor(Math.random() * 2) + 2;
-					// system.itemDisplay.current = 4; // for testing
-					system.itemDisplay.displayed = system.itemDisplay.current;
-				}
-				if (system.itemDisplay.frame === 540 || system.itemDisplay.frame === 480) {
-					if (system.itemDisplay.current === 3) {
-						system.balls.data.push(new Ball(true));
-					}
-				}
-			}
-			
-			if (system.itemDisplay.frame === 0) {
-				system.itemDisplay.current = 0;
-				system.itemDisplay.displayed = 0;
-			}
-			
-			// *****
-			// Other
-			// *****
-			
-			system.firstFrame = false;
-			
-		}
-		
-	}
-	
-	// ******************
-	// RENDERING THE GAME
-	// ******************
-	
-	/*
+
+        var showItemBox = function () {
+          system.itemBox.direction = 45;
+          system.itemBox.appearing = true;
+
+          var x, y, i, j, tooClose;
+          for (i = 0; i <= 10; i++) {
+            x = 20 + Math.round(Math.random() * 60);
+            y = 10 + Math.round(Math.random() * 35);
+            tooClose = false;
+            for (j = 0; j < system.balls.data.length; j++) {
+              if (mathx.distance(system.balls.data[j].x, system.balls.data[j].y, system.itemBox.x, system.itemBox.y) < 20) {
+                tooClose = true;
+              }
+            }
+            if (!tooClose) {
+              i = 11;
+            }
+          }
+          system.itemBox.x = x;
+          system.itemBox.y = y;
+        };
+
+        var itemCollision = function (num) {
+
+          var direction = system.itemBox.direction;
+          var itemx = system.itemBox.x;
+          var itemy = system.itemBox.y;
+          var ballx = system.balls.data[num].x;
+          var bally = system.balls.data[num].y;
+          var size = system.itemBox.size;
+          var ballsize = system.balls.data[num].size;
+
+          var point1; // vertices of the square
+          var point2; // ...
+          var point3; // ...
+          var point4; // ...
+          var slope1; // slope of points 1 & 2 or 3 & 4
+          var slope2; // slope of ponits 1 & 3 or 2 & 4
+          var yint12; // y intereps of lines between given points
+          var yint13; // ...
+          var yint24; // ...
+          var yint34; // ...
+
+          point1 = mathx.rotatePoint(itemx, itemy, mathx.toRadians(direction), itemx - ((0.5 * size) + ballsize), itemy - ((0.5 * size) + ballsize));
+          point2 = mathx.rotatePoint(itemx, itemy, mathx.toRadians(direction), itemx + ((0.5 * size) + ballsize), itemy - ((0.5 * size) + ballsize));
+          point3 = mathx.rotatePoint(itemx, itemy, mathx.toRadians(direction), itemx - ((0.5 * size) + ballsize), itemy + ((0.5 * size) + ballsize));
+          point4 = mathx.rotatePoint(itemx, itemy, mathx.toRadians(direction), itemx + ((0.5 * size) + ballsize), itemy + ((0.5 * size) + ballsize));
+
+          // Assign slopes...
+
+          if (point1.x === point2.x) {
+            slope1 = "undefined";
+          } else {
+            slope1 = ((point2.y - point1.y) / (point2.x - point1.x));
+          }
+
+          if (point1.x === point3.x) {
+            slope2 = "undefined";
+          } else {
+            slope2 = ((point3.y - point1.y) / (point3.x - point1.x));
+          }
+
+          // Assign y intercepts...
+
+          if (slope1 === "undefined") {
+            yint12 = "undefined";
+            yint34 = "undefined";
+          } else {
+            yint12 = point1.y - (slope1 * point1.x);
+            yint34 = point3.y - (slope1 * point3.x);
+          }
+
+          if (slope2 === "undefined") {
+            yint13 = "undefined";
+            yint24 = "undefined";
+          } else {
+            yint13 = point1.y - (slope2 * point1.x);
+            yint24 = point2.y - (slope2 * point2.x);
+          }
+
+          // Check for collision on line from 1 to 2
+
+          if (point1.x === point2.x) {
+            if (point1.y > point2.y) { // right side of the square
+              if (ballx > point1.x) {
+                return false;
+              }
+            } else { // left side of the square
+              if (ballx < point1.x) {
+                return false;
+              }
+            }
+          } else if (point1.x < point2.x) { // top side of the square
+            if (bally < yint12 + (slope1 * ballx)) {
+              return false;
+            }
+          } else if (point1.x > point2.x) { // bottom side of the square
+            if (bally > yint12 + (slope1 * ballx)) {
+              return false;
+            }
+          }
+
+          // Check for collision on line from 3 to 4
+
+          if (point3.x === point4.x) {
+            if (point3.y > point4.y) { // left side of the square
+              if (ballx < point3.x) {
+                return false;
+              }
+            } else { // right side of the square
+              if (ballx > point3.x) {
+                return false;
+              }
+            }
+          } else if (point3.x < point4.x) { // bottom side of the square
+            if (bally > yint34 + (slope1 * ballx)) {
+              return false;
+            }
+          } else if (point3.x > point4.x) { // top side of the square
+            if (bally < yint34 + (slope1 * ballx)) {
+              return false;
+            }
+          }
+
+          // Check for collision on line from 1 to 3
+
+          if (point1.x === point3.x) {
+            if (point1.y > point3.y) { // left side of the square
+              if (ballx < point1.x) {
+                return false;
+              }
+            } else { // right side of the square
+              if (ballx > point1.x) {
+                return false;
+              }
+            }
+          } else if (point1.x < point3.x) { // bottom side of the square
+            if (bally > yint13 + (slope2 * ballx)) {
+              return false;
+            }
+          } else if (point1.x > point3.x) { // top side of the square
+            if (bally < yint13 + (slope2 * ballx)) {
+              return false;
+            }
+          }
+
+          // Check for collision on line from 2 to 4
+
+          if (point2.x === point4.x) {
+            if (point2.y > point4.y) { // right side of the square
+              if (ballx > point2.x) {
+                return false;
+              }
+            } else { // left side of the square
+              if (ballx < point2.x) {
+                return false;
+              }
+            }
+          } else if (point2.x < point4.x) { // top side of the square
+            if (bally < yint24 + (slope2 * ballx)) {
+              return false;
+            }
+          } else if (point2.x > point4.x) { // bottom side of the square
+            if (bally > yint24 + (slope2 * ballx)) {
+              return false;
+            }
+          }
+
+          return true;
+
+        };
+
+        // This rotates the item box
+        system.itemBox.direction += system.itemBox.turnSpeed;
+        if (system.itemBox.direction >= 360) {
+          system.itemBox.direction = 0;
+        }
+
+        // This ensures the itembox resets upon death
+        if (system.score.current < 10) {
+          system.itemDisplay.displayed = 0;
+          system.itemDisplay.current = 0;
+          system.itemDisplay.frame = 0;
+          system.itemBox.appearing = false;
+        }
+
+        if (system.score.current % 20 === 10 && system.firstFrame) {
+          showItemBox();
+        }
+
+        var itemBoxCollided = false;
+        if (system.itemBox.appearing === true) {
+          for (i = 0; i < system.balls.data.length; i++) {
+            if (itemCollision(i)) {
+              itemBoxCollided = true;
+            }
+          }
+          if (itemBoxCollided) {
+            system.itemBox.appearing = false;
+            generateParticles(system.itemBox.x, system.itemBox.y);
+            system.itemDisplay.current = 1;
+            system.itemDisplay.displayed = 1;
+            system.itemDisplay.frame = 660;
+          }
+        }
+
+        if (system.itemDisplay.frame > 0) {
+          system.itemDisplay.frame--;
+          if (system.itemDisplay.frame === 600) {
+            system.itemDisplay.current = Math.floor(Math.random() * 3) + 2;
+            // system.itemDisplay.current = 4; // for testing
+            system.itemDisplay.displayed = system.itemDisplay.current;
+          }
+          if (system.itemDisplay.frame === 540 || system.itemDisplay.frame === 480) {
+            if (system.itemDisplay.current === 3) {
+              system.balls.data.push(new Ball(true));
+            }
+          }
+        }
+
+        if (system.itemDisplay.frame === 0) {
+          // This prevents the magnet from ending while the ball is falling (to troll the player)
+          if (system.balls.data[0].dy < 0 && system.itemDisplay.current === 4) {
+            system.itemDisplay.frame++;
+          } else {
+            system.itemDisplay.current = 0;
+            system.itemDisplay.displayed = 0;
+          }
+        }
+
+        // *****
+        // Other
+        // *****
+
+        system.firstFrame = false;
+
+      }
+
+    }
+
+    // ******************
+    // RENDERING THE GAME
+    // ******************
+
+    /*
 	To structure and modularize the code, all of the functions for drawing
 	different objects are defined first, and then they are called at the end
 	based on what stage the program is at (main menu, instructions, etc.) and
@@ -1644,21 +1686,28 @@ function game() {
 	(rgba(0, 1, 2, 0.5)). I try to use hex codes for most normal colors, and
 	rgba values for when opacity is involved.
 	*/
-	
-	function draw() {
-		
-		// ****************
-		// Black background
-		// ****************
-		
-		ctx.fillStyle = "#000";
-		ctx.fillRect(0, 0, canvas.width, canvas.height);
-		
-		// ***************
-		// Displaying text
-		// ***************
-		
-		/*
+
+    function draw() {
+
+      var colors = {
+        BLACK: "rgba(0, 0, 0, 1)",
+        DARKGRAY: "rgba(85, 85, 85, 1)",
+        LIGHTGRAY: "rgba(170, 170, 170, 1)",
+        WHITE: "rgba(255, 255, 255, 1)"
+      };
+
+      // ****************
+      // Black background
+      // ****************
+
+      ctx.fillStyle = colors.BLACK;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // ***************
+      // Displaying text
+      // ***************
+
+      /*
 		While text can be displayed for each part of the program using the
 		raw canvas methods, after having to write many of these statements,
 		I decided to write a method to simplify things. Now the dispMsg()
@@ -1681,130 +1730,130 @@ function game() {
 		value represents the center of the text, and if it is "right" or
 		"left" then it represents the top of the text.
 		*/
-		
-		var dispMsg = function(text, font, fontsize, x, y, color, alignment) {
-			
-			ctx.font = (fontsize * canvas.height / 70) + "pt " + font;
-			ctx.fillStyle = color;
-			ctx.textAlign = alignment;
-			if (alignment === "center") {
-				ctx.fillText(text, x * (canvas.width / 100), (y * (canvas.height / 75)) + (fontsize * canvas.height / 140));
-			} else if (alignment === "left") {
-				ctx.fillText(text, x * (canvas.width / 100), (y * (canvas.height / 75)) + (fontsize * canvas.height / 70));
-			} else if (alignment === "right") {
-				ctx.fillText(text, x * (canvas.width / 100), (y * (canvas.height / 75)) + (fontsize * canvas.height / 70));
-			}
-			
-		};
-		
-		// *********************
-		// Drawing the character
-		// *********************
-		
-		/*
+
+      var dispMsg = function (text, font, fontsize, x, y, color, alignment) {
+
+        ctx.font = (fontsize * canvas.height / 70) + "pt " + font;
+        ctx.fillStyle = color;
+        ctx.textAlign = alignment;
+        if (alignment === "center") {
+          ctx.fillText(text, x * (canvas.width / 100), (y * (canvas.height / 75)) + (fontsize * canvas.height / 140));
+        } else if (alignment === "left") {
+          ctx.fillText(text, x * (canvas.width / 100), (y * (canvas.height / 75)) + (fontsize * canvas.height / 70));
+        } else if (alignment === "right") {
+          ctx.fillText(text, x * (canvas.width / 100), (y * (canvas.height / 75)) + (fontsize * canvas.height / 70));
+        }
+
+      };
+
+      // *********************
+      // Drawing the character
+      // *********************
+
+      /*
 		Since the character is always a rectangle that is never rotated (and
 		the y position stays the same), it is relatively easy to render the
 		character. (At least as it is now).
 		*/
-		
-		var drawChar = function() {
-			
-			ctx.fillStyle = "#888";
-			ctx.beginPath();
-			ctx.moveTo(((system.character.x - 2) / 100 * canvas.width), (canvas.height / 75 * 60));
-			ctx.lineTo(((system.character.x + 2) / 100 * canvas.width), (canvas.height / 75 * 60));
-			ctx.lineTo(((system.character.x + 2) / 100 * canvas.width), canvas.height);
-			ctx.lineTo(((system.character.x - 2) / 100 * canvas.width), canvas.height);
-			ctx.fill();
-			
-		};
-		
-		// ******************
-		// Drawing the paddle
-		// ******************
-		
-		/*
+
+      var drawChar = function () {
+
+        ctx.fillStyle = colors.DARKGRAY;
+        ctx.beginPath();
+        ctx.moveTo(((system.character.x - 2) / 100 * canvas.width), (canvas.height / 75 * 60));
+        ctx.lineTo(((system.character.x + 2) / 100 * canvas.width), (canvas.height / 75 * 60));
+        ctx.lineTo(((system.character.x + 2) / 100 * canvas.width), canvas.height);
+        ctx.lineTo(((system.character.x - 2) / 100 * canvas.width), canvas.height);
+        ctx.fill();
+
+      };
+
+      // ******************
+      // Drawing the paddle
+      // ******************
+
+      /*
 		This function isn't too complex in itself except for the fact that it
 		requires the mathx.rotatePoint() method for rendering it.
 		*/
-		
-		var drawPaddle = function() {
-		
-			// Center of the paddle (for rotation)
-			var centerx = system.character.x;
-			var centery = 62;
-			
-			// Coordinates of the paddle's points assuming it is tilted
-			// upwards - x is relative to the character, y is based on grid
-			var x1 = -8;
-			var y1 = 56;
-			var x2 = 8;
-			var y2 = 56;
-			var x3 = 8;
-			var y3 = 60;
-			var x4 = -8;
-			var y4 = 60;
-			
-			var temp; // temporary coordinate used for rotation
-			ctx.fillStyle = "#888";
-			ctx.beginPath();
-			temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + x1, y1);
-			ctx.moveTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-			temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + x2, y2);
-			ctx.lineTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-			temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + x3, y3);
-			ctx.lineTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-			temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + x4, y4);
-			ctx.lineTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-			ctx.fill();
-			
-		};
-		
-		// *****************
-		// Drawing the balls
-		// *****************
-		
-		var drawBalls = function() {
-			
-			for (i = 0; i < system.balls.data.length; i++) {
-				var ballOpacity = (1 - (system.balls.data[i].fadeFrame / system.balls.data[i].fadeFrameTotal));
-				var ballX = system.balls.data[i].x;
-				var ballY = system.balls.data[i].y;
-				var ballSize = system.balls.data[i].size;
-				ctx.fillStyle = "rgba(255, 255, 255, " + ballOpacity + ")";
-				ctx.beginPath();
-				ctx.arc(((ballX / 100) * canvas.width), ((ballY / 75) * canvas.height), ((ballSize / 100) * canvas.width), 0, (Math.PI * 2));
-				ctx.fill();
-			}
-			
-		};
-		
-		// ******************
-		// Drawing the target
-		// ******************
-		
-		var drawTarget = function() {
-		
-			ctx.fillStyle = "#666";
-			ctx.beginPath();
-			ctx.arc(((system.target.x / 100) * canvas.width), ((system.target.y / 75) * canvas.height), ((canvas.width / 100) * system.target.size), 0, (Math.PI * 2));
-			ctx.fill();
-			ctx.fillStyle = "#AAA";
-			ctx.beginPath();
-			ctx.arc(((system.target.x / 100) * canvas.width), ((system.target.y / 75) * canvas.height), ((canvas.width / 100) * (system.target.size * 2/3)), 0, (Math.PI * 2));
-			ctx.fill();
-			ctx.fillStyle = "#666";
-			ctx.beginPath();
-			ctx.arc(((system.target.x / 100) * canvas.width), ((system.target.y / 75) * canvas.height), ((canvas.width / 100) * (system.target.size * 1/3)), 0, (Math.PI * 2));
-			ctx.fill();
-			
-		};
-		
-		// ********************
-		// Drawing the item box
-		// ********************
-		
-		/*
+
+      var drawPaddle = function () {
+
+        // Center of the paddle (for rotation)
+        var centerx = system.character.x;
+        var centery = 62;
+
+        // Coordinates of the paddle's points assuming it is tilted
+        // upwards - x is relative to the character, y is based on grid
+        var x1 = -8;
+        var y1 = 56;
+        var x2 = 8;
+        var y2 = 56;
+        var x3 = 8;
+        var y3 = 60;
+        var x4 = -8;
+        var y4 = 60;
+
+        var temp; // temporary coordinate used for rotation
+        ctx.fillStyle = colors.DARKGRAY;
+        ctx.beginPath();
+        temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + x1, y1);
+        ctx.moveTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
+        temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + x2, y2);
+        ctx.lineTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
+        temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + x3, y3);
+        ctx.lineTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
+        temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + x4, y4);
+        ctx.lineTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
+        ctx.fill();
+
+      };
+
+      // *****************
+      // Drawing the balls
+      // *****************
+
+      var drawBalls = function () {
+
+        for (i = 0; i < system.balls.data.length; i++) {
+          var ballOpacity = (1 - (system.balls.data[i].fadeFrame / system.balls.data[i].fadeFrameTotal));
+          var ballX = system.balls.data[i].x;
+          var ballY = system.balls.data[i].y;
+          var ballSize = system.balls.data[i].size;
+          ctx.fillStyle = "rgba(255, 255, 255, " + ballOpacity + ")";
+          ctx.beginPath();
+          ctx.arc(((ballX / 100) * canvas.width), ((ballY / 75) * canvas.height), ((ballSize / 100) * canvas.width), 0, (Math.PI * 2));
+          ctx.fill();
+        }
+
+      };
+
+      // ******************
+      // Drawing the target
+      // ******************
+
+      var drawTarget = function () {
+
+        ctx.fillStyle = colors.DARKGRAY;
+        ctx.beginPath();
+        ctx.arc(((system.target.x / 100) * canvas.width), ((system.target.y / 75) * canvas.height), ((canvas.width / 100) * system.target.size), 0, (Math.PI * 2));
+        ctx.fill();
+        ctx.fillStyle = colors.LIGHTGRAY;
+        ctx.beginPath();
+        ctx.arc(((system.target.x / 100) * canvas.width), ((system.target.y / 75) * canvas.height), ((canvas.width / 100) * (system.target.size * 2 / 3)), 0, (Math.PI * 2));
+        ctx.fill();
+        ctx.fillStyle = colors.DARKGRAY;
+        ctx.beginPath();
+        ctx.arc(((system.target.x / 100) * canvas.width), ((system.target.y / 75) * canvas.height), ((canvas.width / 100) * (system.target.size * 1 / 3)), 0, (Math.PI * 2));
+        ctx.fill();
+
+      };
+
+      // ********************
+      // Drawing the item box
+      // ********************
+
+      /*
 		Since I couldn't figure out a reasonable way to make the box curved
 		using the arc method that wouldn't simply require trial and error, I
 		decided to use the quadratic curve method (although it might not be
@@ -1814,266 +1863,268 @@ function game() {
 		In the center there is question mark - which I've made in Verdana for
 		now.
 		*/
-		
-		var drawItemBox = function() {
-			
-			if (system.itemBox.appearing) {
-				
-				// Some variables are re-declared just to keep the code shorter
-				var direction = system.itemBox.direction;
-				var centerx = system.itemBox.x;
-				var centery = system.itemBox.y;
-				var size = system.itemBox.size;
-				var temp; // variable used for storing a temporary point
-				var temp2; // variable used for storing another temp point
-				
-				ctx.fillStyle = "#666";
-				ctx.beginPath();
-				
-				temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx - (0.3 * size), centery - (size * 0.5));
-				ctx.moveTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-				
-				temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx + (0.3 * size), centery - (size * 0.5));
-				ctx.lineTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-				
-				temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx + (0.5 * size), centery - (size * 0.3));
-				temp2 = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx + (0.5 * size), centery - (size * 0.5));
-				ctx.quadraticCurveTo((temp2.x / 100 * canvas.width), (temp2.y / 100 * canvas.width), (temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-				
-				temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx + (0.5 * size), centery + (size * 0.3));
-				ctx.lineTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-				
-				temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx + (0.3 * size), centery + (size * 0.5));
-				temp2 = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx + (0.5 * size), centery + (size * 0.5));
-				ctx.quadraticCurveTo((temp2.x / 100 * canvas.width), (temp2.y / 100 * canvas.width), (temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-				
-				temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx - (0.3 * size), centery + (size * 0.5));
-				ctx.lineTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-				
-				temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx - (0.5 * size), centery + (size * 0.3));
-				temp2 = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx - (0.5 * size), centery + (size * 0.5));
-				ctx.quadraticCurveTo((temp2.x / 100 * canvas.width), (temp2.y / 100 * canvas.width), (temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-				
-				temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx - (0.5 * size), centery - (size * 0.3));
-				ctx.lineTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-				
-				temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx - (0.3 * size), centery - (size * 0.5));
-				temp2 = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx - (0.5 * size), centery - (size * 0.5));
-				ctx.quadraticCurveTo((temp2.x / 100 * canvas.width), (temp2.y / 100 * canvas.width), (temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-				
-				ctx.fill();
-				
-				dispMsg("?", "Verdana", (size * 0.75), centerx, centery, "#FFF", "center");
-				
-			}
-			
-		}
-		
-		// ************************
-		// Drawing the item display
-		// ************************
-		
-		var drawItemDisplay = function() {
-			
-			var opacity;
-			ctx.strokeStyle = "#FFF";
-			ctx.lineWidth = (0.5 / 100 * canvas.width);
-			ctx.beginPath();
-			ctx.moveTo((82 / 100 * canvas.width), (7 / 100 * canvas.width));
-			ctx.lineTo((82 / 100 * canvas.width), (2 / 100 * canvas.width));
-			ctx.lineTo((87 / 100 * canvas.width), (2 / 100 * canvas.width));
-			ctx.moveTo((93 / 100 * canvas.width), (2 / 100 * canvas.width));
-			ctx.lineTo((98 / 100 * canvas.width), (2 / 100 * canvas.width));
-			ctx.lineTo((98 / 100 * canvas.width), (7 / 100 * canvas.width));
-			ctx.moveTo((98 / 100 * canvas.width), (13 / 100 * canvas.width));
-			ctx.lineTo((98 / 100 * canvas.width), (18 / 100 * canvas.width));
-			ctx.lineTo((93 / 100 * canvas.width), (18 / 100 * canvas.width));
-			ctx.moveTo((87 / 100 * canvas.width), (18 / 100 * canvas.width));
-			ctx.lineTo((82 / 100 * canvas.width), (18 / 100 * canvas.width));
-			ctx.lineTo((82 / 100 * canvas.width), (13 / 100 * canvas.width));
-			ctx.stroke();
-			
-			// Draw "2x" text
-			var drawDoubleMultiplier = function() {
-				dispMsg("2x", "Trebuchet MS", 8, 90, 10, "#888", "center");
-			};
-			
-			// Draw 3 white balls in a triangular formation
-			var drawTripleBalls = function() {
-				ctx.beginPath();
-				ctx.arc(((90 / 100) * canvas.width), ((7 / 75) * canvas.height), ((2.5 / 100) * canvas.width), 0, (Math.PI * 2));
-				ctx.fill();
-				ctx.beginPath();
-				ctx.arc(((86 / 100) * canvas.width), ((13 / 75) * canvas.height), ((2.5 / 100) * canvas.width), 0, (Math.PI * 2));
-				ctx.fill();
-				ctx.beginPath();
-				ctx.arc(((94 / 100) * canvas.width), ((13 / 75) * canvas.height), ((2.5 / 100) * canvas.width), 0, (Math.PI * 2));
-				ctx.fill();
-			};
-			
-			// Draw magnet
-			var drawMagnet = function() {
-				ctx.fillStyle = "#888";
-				ctx.beginPath();
-				ctx.arc(((90 / 100) * canvas.width), ((10 / 75) * canvas.height), ((5 / 100) * canvas.width), Math.PI, (Math.PI * 2));
-				ctx.moveTo(((95 / 100) * canvas.width), ((10 / 75) * canvas.height));
-				ctx.lineTo(((94 / 100) * canvas.width), ((15 / 75) * canvas.height));
-				ctx.lineTo(((92 / 100) * canvas.width), ((15 / 75) * canvas.height));
-				ctx.lineTo(((93 / 100) * canvas.width), ((10 / 75) * canvas.height));
-				ctx.moveTo(((87 / 100) * canvas.width), ((10 / 75) * canvas.height));
-				ctx.lineTo(((88 / 100) * canvas.width), ((15 / 75) * canvas.height));
-				ctx.lineTo(((86 / 100) * canvas.width), ((15 / 75) * canvas.height));
-				ctx.lineTo(((85 / 100) * canvas.width), ((10 / 75) * canvas.height));
-				ctx.fill();
-				
-				ctx.fillStyle = "#000";
-				ctx.beginPath();
-				ctx.arc(((90 / 100) * canvas.width), ((10 / 75) * canvas.height), ((3 / 100) * canvas.width), Math.PI, (Math.PI * 2));
-				ctx.fill();
-				
-				ctx.fillStyle = "#fff";
-				ctx.beginPath();
-				ctx.moveTo(((85.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
-				ctx.lineTo(((86 / 100) * canvas.width), ((15 / 75) * canvas.height));
-				ctx.lineTo(((88 / 100) * canvas.width), ((15 / 75) * canvas.height));
-				ctx.lineTo(((87.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
-				ctx.lineTo(((85.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
-				
-				ctx.moveTo(((94.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
-				ctx.lineTo(((94 / 100) * canvas.width), ((15 / 75) * canvas.height));
-				ctx.lineTo(((92 / 100) * canvas.width), ((15 / 75) * canvas.height));
-				ctx.lineTo(((92.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
-				ctx.lineTo(((94.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
-				ctx.fill();
-			}
-			
-			var randomItem;
-			if (system.itemDisplay.displayed === 0) {
-				// Draw "no item" text
-				dispMsg("no", "Trebuchet MS", 3, 90, 7.5, "#888", "center");
-				dispMsg("item", "Trebuchet MS", 3, 90, 12.5, "#888", "center");
-			} else if (system.itemDisplay.displayed === 1) {
-				randomItem = system.itemDisplay.frame % 8;
-				if (randomItem < 4) {
-					drawDoubleMultiplier();
-				} else if (randomItem >= 4) {
-					drawTripleBalls();
-				}
-			} else if (system.itemDisplay.displayed === 2) {
-				drawDoubleMultiplier();
-			} else if (system.itemDisplay.displayed === 3) {
-				// Draw 3 white balls in a triangular formation
-				if (system.itemDisplay.frame > 300) {
-					opacity = (1 - ((600 - system.itemDisplay.frame) / 300));
-					ctx.fillStyle = "rgba(255, 255, 255, " + opacity + ")";
-					drawTripleBalls();
-				} else {
-					system.itemDisplay.displayed = 0;
-				}
-			} else if (system.itemDisplay.displayed === 4) {
-				drawMagnet();
-			}
-			
-		};
-		
-		// ********************
-		// Displaying the timer
-		// ********************
-		
-		var drawTimer = function() {
-			
-			dispMsg(Math.ceil(system.itemDisplay.frame / 60), "Trebuchet MS", 4, 76, 10, "#FFF", "center");
-			ctx.fillStyle = "#FFF";
-			ctx.beginPath();
-			ctx.arc(((68 / 100) * canvas.width), ((10 / 75) * canvas.height), ((canvas.width / 100) * 4), 0, (Math.PI * 2));
-			ctx.fill();
-			ctx.fillStyle = "#888";
-			ctx.beginPath();
-			ctx.arc(((68 / 100) * canvas.width), ((10 / 75) * canvas.height), ((canvas.width / 100) * 3.5), 0, (Math.PI * 2));
-			ctx.fill();
-			ctx.fillStyle = "#000";
-			ctx.beginPath();
-			ctx.arc(((68 / 100) * canvas.width), ((10 / 75) * canvas.height), ((canvas.width / 100) * 3.5), (Math.PI * 1.5), (Math.PI * 1.5) + ((Math.PI * 2) * ((0 - system.itemDisplay.frame) / 600)), false);
-			ctx.lineTo(((68 / 100) * canvas.width), ((10 / 75) * canvas.height));
-			ctx.fill();
-			
-		};
-		
-		// *********************
-		// Drawing the particles
-		// *********************
-		
-		var drawParticles = function() {
-			
-			var i;
-			for (i = 0; i < system.particles.data.length; i++) {
-				var renderx = (system.particles.data[i].x / 100) * canvas.width;
-				var rendery = (system.particles.data[i].y / 100) * canvas.width;
-				var renderw = (system.particles.width / 100) * canvas.width;
-				ctx.fillStyle = "#FFF";
-				ctx.fillRect(renderx, rendery, renderw, renderw);
-			}
-			
-		}
-		
-		// ******************
-		// Drawing the scores
-		// ******************
-		
-		/*
+
+      var drawItemBox = function () {
+
+        if (system.itemBox.appearing) {
+
+          // Some variables are re-declared just to keep the code shorter
+          var direction = system.itemBox.direction;
+          var centerx = system.itemBox.x;
+          var centery = system.itemBox.y;
+          var size = system.itemBox.size;
+          var temp; // variable used for storing a temporary point
+          var temp2; // variable used for storing another temp point
+
+          ctx.fillStyle = colors.DARKGRAY;
+          ctx.beginPath();
+
+          temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx - (0.3 * size), centery - (size * 0.5));
+          ctx.moveTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
+
+          temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx + (0.3 * size), centery - (size * 0.5));
+          ctx.lineTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
+
+          temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx + (0.5 * size), centery - (size * 0.3));
+          temp2 = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx + (0.5 * size), centery - (size * 0.5));
+          ctx.quadraticCurveTo((temp2.x / 100 * canvas.width), (temp2.y / 100 * canvas.width), (temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
+
+          temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx + (0.5 * size), centery + (size * 0.3));
+          ctx.lineTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
+
+          temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx + (0.3 * size), centery + (size * 0.5));
+          temp2 = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx + (0.5 * size), centery + (size * 0.5));
+          ctx.quadraticCurveTo((temp2.x / 100 * canvas.width), (temp2.y / 100 * canvas.width), (temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
+
+          temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx - (0.3 * size), centery + (size * 0.5));
+          ctx.lineTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
+
+          temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx - (0.5 * size), centery + (size * 0.3));
+          temp2 = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx - (0.5 * size), centery + (size * 0.5));
+          ctx.quadraticCurveTo((temp2.x / 100 * canvas.width), (temp2.y / 100 * canvas.width), (temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
+
+          temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx - (0.5 * size), centery - (size * 0.3));
+          ctx.lineTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
+
+          temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx - (0.3 * size), centery - (size * 0.5));
+          temp2 = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx - (0.5 * size), centery - (size * 0.5));
+          ctx.quadraticCurveTo((temp2.x / 100 * canvas.width), (temp2.y / 100 * canvas.width), (temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
+
+          ctx.fill();
+
+          dispMsg("?", "Verdana", (size * 0.75), centerx, centery, "#FFF", "center");
+
+        }
+
+      }
+
+      // ************************
+      // Drawing the item display
+      // ************************
+
+      var drawItemDisplay = function () {
+
+        var opacity;
+        ctx.strokeStyle = colors.WHITE;
+        ctx.lineWidth = (0.5 / 100 * canvas.width);
+        ctx.beginPath();
+        ctx.moveTo((82 / 100 * canvas.width), (7 / 100 * canvas.width));
+        ctx.lineTo((82 / 100 * canvas.width), (2 / 100 * canvas.width));
+        ctx.lineTo((87 / 100 * canvas.width), (2 / 100 * canvas.width));
+        ctx.moveTo((93 / 100 * canvas.width), (2 / 100 * canvas.width));
+        ctx.lineTo((98 / 100 * canvas.width), (2 / 100 * canvas.width));
+        ctx.lineTo((98 / 100 * canvas.width), (7 / 100 * canvas.width));
+        ctx.moveTo((98 / 100 * canvas.width), (13 / 100 * canvas.width));
+        ctx.lineTo((98 / 100 * canvas.width), (18 / 100 * canvas.width));
+        ctx.lineTo((93 / 100 * canvas.width), (18 / 100 * canvas.width));
+        ctx.moveTo((87 / 100 * canvas.width), (18 / 100 * canvas.width));
+        ctx.lineTo((82 / 100 * canvas.width), (18 / 100 * canvas.width));
+        ctx.lineTo((82 / 100 * canvas.width), (13 / 100 * canvas.width));
+        ctx.stroke();
+
+        // Draw "2x" text
+        var drawDoubleMultiplier = function () {
+          dispMsg("2x", "Trebuchet MS", 8, 90, 10, colors.DARKGRAY, "center");
+        };
+
+        // Draw 3 white balls in a triangular formation
+        var drawTripleBalls = function () {
+          ctx.beginPath();
+          ctx.arc(((90 / 100) * canvas.width), ((7 / 75) * canvas.height), ((2.5 / 100) * canvas.width), 0, (Math.PI * 2));
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(((86 / 100) * canvas.width), ((13 / 75) * canvas.height), ((2.5 / 100) * canvas.width), 0, (Math.PI * 2));
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(((94 / 100) * canvas.width), ((13 / 75) * canvas.height), ((2.5 / 100) * canvas.width), 0, (Math.PI * 2));
+          ctx.fill();
+        };
+
+        // Draw magnet
+        var drawMagnet = function () {
+          ctx.fillStyle = colors.DARKGRAY;
+          ctx.beginPath();
+          ctx.arc(((90 / 100) * canvas.width), ((10 / 75) * canvas.height), ((5 / 100) * canvas.width), Math.PI, (Math.PI * 2));
+          ctx.moveTo(((95 / 100) * canvas.width), ((10 / 75) * canvas.height));
+          ctx.lineTo(((94 / 100) * canvas.width), ((15 / 75) * canvas.height));
+          ctx.lineTo(((92 / 100) * canvas.width), ((15 / 75) * canvas.height));
+          ctx.lineTo(((93 / 100) * canvas.width), ((10 / 75) * canvas.height));
+          ctx.moveTo(((87 / 100) * canvas.width), ((10 / 75) * canvas.height));
+          ctx.lineTo(((88 / 100) * canvas.width), ((15 / 75) * canvas.height));
+          ctx.lineTo(((86 / 100) * canvas.width), ((15 / 75) * canvas.height));
+          ctx.lineTo(((85 / 100) * canvas.width), ((10 / 75) * canvas.height));
+          ctx.fill();
+
+          ctx.fillStyle = colors.BLACK;
+          ctx.beginPath();
+          ctx.arc(((90 / 100) * canvas.width), ((10 / 75) * canvas.height), ((3 / 100) * canvas.width), Math.PI, (Math.PI * 2));
+          ctx.fill();
+
+          ctx.fillStyle = colors.WHITE;;
+          ctx.beginPath();
+          ctx.moveTo(((85.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
+          ctx.lineTo(((86 / 100) * canvas.width), ((15 / 75) * canvas.height));
+          ctx.lineTo(((88 / 100) * canvas.width), ((15 / 75) * canvas.height));
+          ctx.lineTo(((87.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
+          ctx.lineTo(((85.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
+
+          ctx.moveTo(((94.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
+          ctx.lineTo(((94 / 100) * canvas.width), ((15 / 75) * canvas.height));
+          ctx.lineTo(((92 / 100) * canvas.width), ((15 / 75) * canvas.height));
+          ctx.lineTo(((92.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
+          ctx.lineTo(((94.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
+          ctx.fill();
+        }
+
+        var randomItem;
+        if (system.itemDisplay.displayed === 0) {
+          // Draw "no item" text
+          dispMsg("no", "Trebuchet MS", 3, 90, 7.5, colors.DARKGRAY, "center");
+          dispMsg("item", "Trebuchet MS", 3, 90, 12.5, colors.DARKGRAY, "center");
+        } else if (system.itemDisplay.displayed === 1) {
+          randomItem = system.itemDisplay.frame % 9;
+          if (randomItem < 3) {
+            drawDoubleMultiplier();
+          } else if (randomItem < 6) {
+            drawTripleBalls();
+          } else {
+            drawMagnet();
+          }
+        } else if (system.itemDisplay.displayed === 2) {
+          drawDoubleMultiplier();
+        } else if (system.itemDisplay.displayed === 3) {
+          // Draw 3 white balls in a triangular formation
+          if (system.itemDisplay.frame > 300) {
+            opacity = (1 - ((600 - system.itemDisplay.frame) / 300));
+            ctx.fillStyle = "rgba(255, 255, 255, " + opacity + ")";
+            drawTripleBalls();
+          } else {
+            system.itemDisplay.displayed = 0;
+          }
+        } else if (system.itemDisplay.displayed === 4) {
+          drawMagnet();
+        }
+
+      };
+
+      // ********************
+      // Displaying the timer
+      // ********************
+
+      var drawTimer = function () {
+
+        dispMsg(Math.ceil(system.itemDisplay.frame / 60), "Trebuchet MS", 4, 76, 10, "#FFF", "center");
+        ctx.fillStyle = colors.WHITE;
+        ctx.beginPath();
+        ctx.arc(((68 / 100) * canvas.width), ((10 / 75) * canvas.height), ((canvas.width / 100) * 4), 0, (Math.PI * 2));
+        ctx.fill();
+        ctx.fillStyle = colors.DARKGRAY;
+        ctx.beginPath();
+        ctx.arc(((68 / 100) * canvas.width), ((10 / 75) * canvas.height), ((canvas.width / 100) * 3.5), 0, (Math.PI * 2));
+        ctx.fill();
+        ctx.fillStyle = colors.BLACK;
+        ctx.beginPath();
+        ctx.arc(((68 / 100) * canvas.width), ((10 / 75) * canvas.height), ((canvas.width / 100) * 3.5), (Math.PI * 1.5), (Math.PI * 1.5) + ((Math.PI * 2) * ((0 - system.itemDisplay.frame) / 600)), false);
+        ctx.lineTo(((68 / 100) * canvas.width), ((10 / 75) * canvas.height));
+        ctx.fill();
+
+      };
+
+      // *********************
+      // Drawing the particles
+      // *********************
+
+      var drawParticles = function () {
+
+        var i;
+        for (i = 0; i < system.particles.data.length; i++) {
+          var renderx = (system.particles.data[i].x / 100) * canvas.width;
+          var rendery = (system.particles.data[i].y / 100) * canvas.width;
+          var renderw = (system.particles.width / 100) * canvas.width;
+          ctx.fillStyle = colors.WHITE;
+          ctx.fillRect(renderx, rendery, renderw, renderw);
+        }
+
+      }
+
+      // ******************
+      // Drawing the scores
+      // ******************
+
+      /*
 		Self explanatory, except that for displaying the large score in the
 		background, the opacity has to be determined - the base value is 0.2.
 		*/
-		
-		var drawScore = function() {
-			
-			dispMsg(system.score.current, "Trebuchet MS", 45, 100, 25, "rgba(255, 255, 255, " + (0.2 + ((system.score.frame / 60) * 0.8)) + ")", "right");
-			dispMsg("high score:", "Trebuchet MS", 3, 1, 4, "#FFF", "left");
-			dispMsg(system.score.high, "Trebuchet MS", 6, 23, 1, "#FFF", "left");
-			
-		};
-		
-		// ******************************
-		// Drawing the high score message
-		// ******************************
-		
-		/*
+
+      var drawScore = function () {
+
+        dispMsg(system.score.current, "Trebuchet MS", 45, 100, 25, "rgba(255, 255, 255, " + (0.2 + ((system.score.frame / 60) * 0.8)) + ")", "right");
+        dispMsg("high score:", "Trebuchet MS", 3, 1, 4, colors.WHITE, "left");
+        dispMsg(system.score.high, "Trebuchet MS", 6, 23, 1, colors.WHITE, "left");
+
+      };
+
+      // ******************************
+      // Drawing the high score message
+      // ******************************
+
+      /*
 		This draws the message that appears when you get a new high score.
 		Two parts change: the message's opacity and y-position. It goes upwards
 		as time goes on, and fades away, both for aesthetic purposes.
 		*/
-		
-		var drawHSMsg = function() {
-			
-			if (system.score.HSframe > 0) {
-				progress = (system.score.HSlength - system.score.HSframe) / system.score.HSlength;
-				dispMsg("new high score!", "Trebuchet MS", 8, 50, 33.5 - (progress * 10), "rgba(255, 255, 255, " + (1 - progress) + ")", "center");
-			}
-			
-		}
-		
-		// *********************
-		// Display pause overlay
-		// *********************
-		
-		var drawPauseOverlay = function() {
-			
-			ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-			ctx.fillRect(0, 0, canvas.width, canvas.height);
-			dispMsg("paused", "Trebuchet MS", 8, 50, 30, "#FFF", "center");
-			if (isiOS) {
-				dispMsg("(double tap to continue)", "Trebuchet MS", 3, 50, 40, "#FFF", "center");
-			} else {
-				dispMsg("(press space to continue)", "Trebuchet MS", 3, 50, 40, "#FFF", "center");
-			}
-			
-		}
-		
-		// ******************
-		// Drawing debug info
-		// ******************
-		
-		/*
+
+      var drawHSMsg = function () {
+
+        if (system.score.HSframe > 0) {
+          progress = (system.score.HSlength - system.score.HSframe) / system.score.HSlength;
+          dispMsg("new high score!", "Trebuchet MS", 8, 50, 33.5 - (progress * 10), "rgba(255, 255, 255, " + (1 - progress) + ")", "center");
+        }
+
+      }
+
+      // *********************
+      // Display pause overlay
+      // *********************
+
+      var drawPauseOverlay = function () {
+
+        ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        dispMsg("paused", "Trebuchet MS", 8, 50, 30, colors.WHITE, "center");
+        if (isiOS) {
+          dispMsg("(double tap to continue)", "Trebuchet MS", 3, 50, 40, colors.WHITE, "center");
+        } else {
+          dispMsg("(press space to continue)", "Trebuchet MS", 3, 50, 40, colors.WHITE, "center");
+        }
+
+      }
+
+      // ******************
+      // Drawing debug info
+      // ******************
+
+      /*
 		There are a lot of different pieces of debug info that are useful for
 		different parts of development. Often this means displaying variables
 		to see if a particular piece of code is working, or displaying the
@@ -2082,66 +2133,66 @@ function game() {
 		Also, it can display different debug info depending on the device
 		being used, which is handy.
 		*/
-		
-		var drawDebugInfo = function() {
-			
-			dispMsg("fps: " + ((Math.round(currentfps * 10)) / 10), "Trebuchet MS", 2, 0, 72.5, "#FFF", "left");
-			// dispMsg("canvas-width: " + canvas.width, "Trebuchet MS", 5, 0, 10, "#FFF", "left");
-			// dispMsg("window-width: " + window.innerWidth, "Trebuchet MS", 5, 0, 20, "#FFF", "left");
-			// dispMsg("gameSpeed: " + system.gameSpeed, "Trebuchet MS", 2, 100, 9, "#FFF", "right");
-			if (isiOS) {
-				// dispMsg("Using iPad", "Trebuchet MS", 2, 100, 9, "#FFF", "right");
-				// dispMsg("YAccel: " + ((Math.round(ioscontrols.yaccel * 10)) / 10), "Trebuchet MS", 2, 100, 11.5, "#FFF", "right");
-				// dispMsg("Tapping?: " + ioscontrols.tapping, "Trebuchet MS", 2, 100, 14, "#FFF", "right");
-			} else {
-				// dispMsg("Not using iPad", "Trebuchet MS", 2, 100, 9, "#FFF", "right");
-			}
-			// dispMsg("v. 2.1_05 (b26)", "Trebuchet MS", 3, 0, 70, "#FFF", "left");
-			// dispMsg("sys.char.dx: " + ((Math.round(system.character.dx * 10)) / 10), "Trebuchet MS", 24, 100, 50, "#FFF");
-			// dispMsg("Mouse X: " + controls.mouseX + " (" + ((Math.round((controls.mouseX / (canvas.width / 100)) * 10)) / 10) + ")", "Trebuchet MS", 3, 100, 9, "#FFF", "right");
-			// dispMsg("Mouse Y: " + controls.mouseY + " (" + ((Math.round((controls.mouseY / (canvas.height / 75)) * 10)) / 10) + ")", "Trebuchet MS", 3, 100, 13, "#FFF", "right");
-			// dispMsg("BallDx: " + ((Math.round(system.ball.dx * 10)) / 10), "Trebuchet MS", 3, 1, 17, "#FFF");
-			// dispMsg("Colliding?: " + system.ball.colliding, "Trebuchet MS", 3, 1, 13, "#FFF");
-			
-		}
-		
-		// ********************
-		// Drawing debug points
-		// ********************
-		
-		var drawDebugPoints = function() {
-			
-			var direction = system.itemBox.direction;
-			var itemx = system.itemBox.x;
-			var itemy = system.itemBox.y;
-			var size = system.itemBox.size;
-			var ballsize = system.ball.size;
-			
-			var point1; // vertices of the square
-			var point2; // ...
-			var point3; // ...
-			var point4; // ...
-			
-			point1 = mathx.rotatePoint(itemx, itemy, mathx.toRadians(direction), itemx - ((0.5 * size) + ballsize), itemy - ((0.5 * size) + ballsize));
-			point2 = mathx.rotatePoint(itemx, itemy, mathx.toRadians(direction), itemx + ((0.5 * size) + ballsize), itemy - ((0.5 * size) + ballsize));
-			point3 = mathx.rotatePoint(itemx, itemy, mathx.toRadians(direction), itemx - ((0.5 * size) + ballsize), itemy + ((0.5 * size) + ballsize));
-			point4 = mathx.rotatePoint(itemx, itemy, mathx.toRadians(direction), itemx + ((0.5 * size) + ballsize), itemy + ((0.5 * size) + ballsize));
-			
-			ctx.fillStyle = "#0000FF";
-			ctx.beginPath();
-			ctx.arc((point1.x / 100 * canvas.width), (point1.y / 100 * canvas.width), (1 / 100 * canvas.width), 0, (Math.PI * 2));
-			ctx.arc((point2.x / 100 * canvas.width), (point2.y / 100 * canvas.width), (1 / 100 * canvas.width), 0, (Math.PI * 2));
-			ctx.arc((point3.x / 100 * canvas.width), (point3.y / 100 * canvas.width), (1 / 100 * canvas.width), 0, (Math.PI * 2));
-			ctx.arc((point4.x / 100 * canvas.width), (point4.y / 100 * canvas.width), (1 / 100 * canvas.width), 0, (Math.PI * 2));
-			ctx.fill();
-			
-		}
-		
-		// ******************
-		// Drawing debug grid
-		// ******************
-		
-		/*
+
+      var drawDebugInfo = function () {
+
+        dispMsg("fps: " + ((Math.round(currentfps * 10)) / 10), "Trebuchet MS", 2, 0, 72.5, colors.WHITE, "left");
+        // dispMsg("canvas-width: " + canvas.width, "Trebuchet MS", 5, 0, 10, "#FFF", "left");
+        // dispMsg("window-width: " + window.innerWidth, "Trebuchet MS", 5, 0, 20, "#FFF", "left");
+        // dispMsg("gameSpeed: " + system.gameSpeed, "Trebuchet MS", 2, 100, 9, "#FFF", "right");
+        if (isiOS) {
+          // dispMsg("Using iPad", "Trebuchet MS", 2, 100, 9, "#FFF", "right");
+          // dispMsg("YAccel: " + ((Math.round(ioscontrols.yaccel * 10)) / 10), "Trebuchet MS", 2, 100, 11.5, "#FFF", "right");
+          // dispMsg("Tapping?: " + ioscontrols.tapping, "Trebuchet MS", 2, 100, 14, "#FFF", "right");
+        } else {
+          // dispMsg("Not using iPad", "Trebuchet MS", 2, 100, 9, "#FFF", "right");
+        }
+        // dispMsg("v. 2.1_05 (b26)", "Trebuchet MS", 3, 0, 70, "#FFF", "left");
+        // dispMsg("sys.char.dx: " + ((Math.round(system.character.dx * 10)) / 10), "Trebuchet MS", 24, 100, 50, "#FFF");
+        // dispMsg("Mouse X: " + controls.mouseX + " (" + ((Math.round((controls.mouseX / (canvas.width / 100)) * 10)) / 10) + ")", "Trebuchet MS", 3, 100, 9, "#FFF", "right");
+        // dispMsg("Mouse Y: " + controls.mouseY + " (" + ((Math.round((controls.mouseY / (canvas.height / 75)) * 10)) / 10) + ")", "Trebuchet MS", 3, 100, 13, "#FFF", "right");
+        // dispMsg("BallDx: " + ((Math.round(system.ball.dx * 10)) / 10), "Trebuchet MS", 3, 1, 17, "#FFF");
+        // dispMsg("Colliding?: " + system.ball.colliding, "Trebuchet MS", 3, 1, 13, "#FFF");
+
+      }
+
+      // ********************
+      // Drawing debug points
+      // ********************
+
+      var drawDebugPoints = function () {
+
+        var direction = system.itemBox.direction;
+        var itemx = system.itemBox.x;
+        var itemy = system.itemBox.y;
+        var size = system.itemBox.size;
+        var ballsize = system.ball.size;
+
+        var point1; // vertices of the square
+        var point2; // ...
+        var point3; // ...
+        var point4; // ...
+
+        point1 = mathx.rotatePoint(itemx, itemy, mathx.toRadians(direction), itemx - ((0.5 * size) + ballsize), itemy - ((0.5 * size) + ballsize));
+        point2 = mathx.rotatePoint(itemx, itemy, mathx.toRadians(direction), itemx + ((0.5 * size) + ballsize), itemy - ((0.5 * size) + ballsize));
+        point3 = mathx.rotatePoint(itemx, itemy, mathx.toRadians(direction), itemx - ((0.5 * size) + ballsize), itemy + ((0.5 * size) + ballsize));
+        point4 = mathx.rotatePoint(itemx, itemy, mathx.toRadians(direction), itemx + ((0.5 * size) + ballsize), itemy + ((0.5 * size) + ballsize));
+
+        ctx.fillStyle = "#0000FF";
+        ctx.beginPath();
+        ctx.arc((point1.x / 100 * canvas.width), (point1.y / 100 * canvas.width), (1 / 100 * canvas.width), 0, (Math.PI * 2));
+        ctx.arc((point2.x / 100 * canvas.width), (point2.y / 100 * canvas.width), (1 / 100 * canvas.width), 0, (Math.PI * 2));
+        ctx.arc((point3.x / 100 * canvas.width), (point3.y / 100 * canvas.width), (1 / 100 * canvas.width), 0, (Math.PI * 2));
+        ctx.arc((point4.x / 100 * canvas.width), (point4.y / 100 * canvas.width), (1 / 100 * canvas.width), 0, (Math.PI * 2));
+        ctx.fill();
+
+      }
+
+      // ******************
+      // Drawing debug grid
+      // ******************
+
+      /*
 		Although I don't typically have to use it often, the debug grid can
 		come useful for determining where to position/space text and designing
 		new objects for the screen to see if they are the right size.
@@ -2150,113 +2201,139 @@ function game() {
 		are made using screen-units, so the width is 100 no matter the actual
 		size of the browser. This makes measuring in pixels redundant.
 		*/
-		
-		var drawDebugGrid = function() {
-			
-			ctx.strokeStyle = "#FFF";
-			ctx.beginPath();
-			var i;
-			for (i = 1; i <= 100; i++) {
-				ctx.moveTo((canvas.width / 100) * i, 0);
-				ctx.lineTo((canvas.width / 100) * i, canvas.height);
-			}
-			for (i = 1; i <=75; i++) {
-				ctx.moveTo(0, (canvas.height / 75) * i);
-				ctx.lineTo(canvas.width, (canvas.height / 75) * i);
-			}
-			ctx.stroke();
-			
-		}
-		
-		// *************************
-		// Displaying intro messages
-		// *************************
-		
-		if (system.stage === 0) {
-			dispMsg(intro.messages[intro.currentMsg], "Trebuchet MS", 4, intro.msgPos, 37.5, "rgba(255, 255, 255, " + (intro.msgOpacity / 100) + ")", "center");
-			if (system.score.high > 10) { // if the user has played before...
-				if (isiOS) {
-					dispMsg("(tap to skip)", "Trebuchet MS", 3, 98, 70, "#fff", "right");
-				} else {
-					dispMsg("(press space to skip)", "Trebuchet MS", 3, 98, 70, "#fff", "right");
-				}
-			}
-		}
-		
-		// ********************
-		// Displaying menu text
-		// ********************
-		
-		if (system.stage === 1) {
-			dispMsg("fast catch", "Trebuchet MS", 10, 50, 28, "rgba(255, 255, 255, " + (title.titleOpacity / 100) + ")", "center");
-			dispMsg("start", "Trebuchet MS", 6, 50, 45, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
-			if (isiOS) {
-				dispMsg("(tap the screen)", "Trebuchet MS", 3, 50, 52, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
-			} else {
-				dispMsg("(press space)", "Trebuchet MS", 3, 50, 52, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
-			}
-		}
-		
-		// ***********************
-		// Displaying instructions
-		// ***********************
-		
-		/*
+
+      var drawDebugGrid = function () {
+
+        ctx.strokeStyle = colors.WHITE;
+        ctx.beginPath();
+        var i;
+        for (i = 1; i <= 100; i++) {
+          ctx.moveTo((canvas.width / 100) * i, 0);
+          ctx.lineTo((canvas.width / 100) * i, canvas.height);
+        }
+        for (i = 1; i <= 75; i++) {
+          ctx.moveTo(0, (canvas.height / 75) * i);
+          ctx.lineTo(canvas.width, (canvas.height / 75) * i);
+        }
+        ctx.stroke();
+
+      }
+
+      // *************************
+      // Displaying intro messages
+      // *************************
+
+      if (system.stage === 0) {
+        dispMsg(intro.messages[intro.currentMsg], "Trebuchet MS", 4, intro.msgPos, 37.5, "rgba(255, 255, 255, " + (intro.msgOpacity / 100) + ")", "center");
+        if (system.score.high > 10) { // if the user has played before...
+          if (isiOS) {
+            dispMsg("(tap to skip)", "Trebuchet MS", 3, 98, 70, colors.WHITE, "right");
+          } else {
+            dispMsg("(press space to skip)", "Trebuchet MS", 3, 98, 70, colors.WHITe, "right");
+          }
+        }
+      }
+
+      // ********************
+      // Displaying menu text
+      // ********************
+
+      if (system.stage === 1) {
+        dispMsg("fast catch", "Trebuchet MS", 10, 50, 28, "rgba(255, 255, 255, " + (title.titleOpacity / 100) + ")", "center");
+        dispMsg("start", "Trebuchet MS", 6, 50, 45, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
+        if (isiOS) {
+          dispMsg("(tap the screen)", "Trebuchet MS", 3, 50, 52, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
+        } else {
+          dispMsg("(press space)", "Trebuchet MS", 3, 50, 52, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
+        }
+      }
+
+      // ***********************
+      // Displaying instructions
+      // ***********************
+
+      /*
 		Note: it was originally difficult/impossible to get the "arrow"
 		symbols to appear because of the encoding of the file (ANSI) - but
 		when I changed it to UTF-8 it worked fine.
 		
 		Resource: http://dev.w3.org/html5/html-author/charref
 		*/
-		
-		if (system.stage === 2) {
-			if (isiOS) {
-				dispMsg("hold your iPad sideways", "Trebuchet MS", 4, 50, 20, "#FFF", "center");
-				dispMsg("tilt your iPad to move the paddle", "Trebuchet MS", 4, 50, 30, "#FFF", "center");
-				dispMsg("double tap to pause", "Trebuchet MS", 4, 50, 40, "#FFF", "center");
-				dispMsg("(tap the screen to start)", "Trebuchet MS", 3, 50, 50, "#FFF", "center");
-			} else {
-				dispMsg("use ← and → to move", "Trebuchet MS", 4, 50, 25, "#FFF", "center");
-				dispMsg("press space to pause", "Trebuchet MS", 4, 50, 35, "#FFF", "center");
-				dispMsg("(press space to start)", "Trebuchet MS", 3, 50, 45, "#FFF", "center");
-			}
-		}
-		
-		// *****************
-		// Display game info
-		// *****************
-		
-		if (system.stage === 3) {
-			drawScore();
-			drawItemDisplay();
-			if (system.itemDisplay.frame > 0 && system.itemDisplay.current === 2) {
-				drawTimer();
-			}
-			drawTarget();
-			drawItemBox();
-			drawPaddle();
-			drawChar();
-			drawBalls();
-			drawParticles();
-			drawHSMsg();
-			if (paused) {
-				drawPauseOverlay();
-			}
-		}
-		
-		// *********************
-		// Displaying debug info
-		// *********************
-		
-		if (debug) {
-			drawDebugInfo();
-			// drawDebugPoints();
-		}
-		
-	}
-	
-	}
-	
+
+      if (system.stage === 2) {
+        if (isiOS) {
+          dispMsg("hold your iPad sideways", "Trebuchet MS", 4, 50, 20, colors.WHITE, "center");
+          dispMsg("tilt your iPad to move the paddle", "Trebuchet MS", 4, 50, 30, colors.WHITE, "center");
+          dispMsg("double tap to pause", "Trebuchet MS", 4, 50, 40, colors.WHITE, "center");
+          dispMsg("(tap the screen to start)", "Trebuchet MS", 3, 50, 50, colors.WHITe, "center");
+        } else {
+          dispMsg("use ← and → to move", "Trebuchet MS", 4, 50, 25, colors.WHITE, "center");
+          dispMsg("press space to pause", "Trebuchet MS", 4, 50, 35, colors.WHITE, "center");
+          dispMsg("(press space to start)", "Trebuchet MS", 3, 50, 45, colors.WHITE, "center");
+        }
+      }
+
+      // *********************
+      // Scale screen elements
+      // *********************
+
+      if (!system.scaled && system.shake === 1) {
+        ctx.save();
+        ctx.scale(1.02, 1.02);
+        ctx.translate(0 - ((canvas.width / 100) * 1), 0 - ((canvas.width / 100) * 1));
+        system.scaled = true;
+      }
+
+      if (system.shake === 3) {
+        ctx.scale(1.02, 1.02);
+        ctx.translate(0 - ((canvas.width / 100) * 1), 0 - ((canvas.width / 100) * 1));
+      }
+
+      if (system.shake === 5) {
+        ctx.scale(0.98, 0.98);
+        ctx.translate(((canvas.width / 100) * 1), ((canvas.width / 100) * 1));
+      }
+
+      if (system.scaled && system.shake === 0) {
+        ctx.restore();
+        system.scaled = false;
+      }
+
+      // *****************
+      // Display game info
+      // *****************
+
+      if (system.stage === 3) {
+        drawScore();
+        drawItemDisplay();
+        if (system.itemDisplay.frame > 0 && (system.itemDisplay.current === 2 || system.itemDisplay.current === 4)) {
+          drawTimer();
+        }
+        drawTarget();
+        drawItemBox();
+        drawPaddle();
+        drawChar();
+        drawBalls();
+        drawParticles();
+        drawHSMsg();
+        if (paused) {
+          drawPauseOverlay();
+        }
+      }
+
+      // *********************
+      // Displaying debug info
+      // *********************
+
+      if (debug) {
+        drawDebugInfo();
+        // drawDebugPoints();
+      }
+
+    }
+
+  }
+
 }
 
 window.onload = game;
