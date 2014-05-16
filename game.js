@@ -12,10 +12,7 @@ TODO:
 - change constants to NAMES_LIKE_THIS?
 - add touch controls
 - animate instructions
-- allow iOS device to be tilted any way (as long as it is in landscape mode
-- add 30 frame cool down for restarting on iPads
 - add shadows?
-- ball bounce off box?
 - fade-in effect for target appearing?
 
 shadows:
@@ -49,14 +46,26 @@ function game() {
 	ratio is very close to that of the game, no borders are added in
 	those situations.
 	
-	Note: objects and positions in the game are defined using a positioning
-	system with x and y values ranging as follows:
+	Note: objects and positions in the game are defined using a
+	positioning system with x and y values ranging as follows:
 	- X: 0 (left edge) to 100 (right edge)
 	- Y: 0 (top edge) to 75 (bottom edge)
 	*/
 	
+	/*
+	This detects if the user is using an iPad, and outputs true if so, and
+	false otherwise. This is used for things like changing controls or
+	displaying different text for menus / instructions.
+	*/
+	
+	var isiOS = navigator.userAgent.match(/(iPad|iPhone|iPod)/i) != null;
+	
 	var canvas = document.getElementById("myCanvas");
 	var screenRatio = window.innerWidth / window.innerHeight;
+	
+	if (canvas.getContext) {
+	
+	var ctx = canvas.getContext("2d");
 	
 	window.onresize = function() {
 		screenRatio = window.innerWidth / window.innerHeight;
@@ -77,17 +86,57 @@ function game() {
 				canvas.style.borderWidth = "0px";
 			}
 		}
+		/*
+		if (isiOS) {
+			rescaleCanvas();
+		}
+		*/
 	};
 	
 	window.onresize();
 	
 	/*
-	This detects if the user is using an iPad, and outputs true if so, and
-	false otherwise. This is used for things like changing controls or
-	displaying different text for menus / instructions.
+	This function is included to (attempt) fixing some blurriness issues with
+	playing the game on iPhones with retina displays.
+	Code based from: http://www.html5rocks.com/en/tutorials/canvas/hidpi/
 	*/
-	
-	var isiOS = navigator.userAgent.match(/(iPad|iPhone|iPod)/i) != null;
+	function rescaleCanvas() {
+		var devicePixelRatio = window.devicePixelRatio || 1;
+		var backingStoreRatio = ctx.webkitBackingStorePixelRatio ||
+								ctx.mozBackingStorePixelRatio ||
+								ctx.msBackingStorePixelRatio ||
+								ctx.oBackingStorePixelRatio ||
+								ctx.backingStorePixelRatio || 1;
+		var ratio = devicePixelRatio / backingStoreRatio;
+		
+		/*
+		if (devicePixelRatio !== backingStoreRatio) {
+			var oldWidth = canvas.width;
+			var oldHeight = canvas.height;
+			
+			canvas.width = oldWidth * ratio;
+			canvas.height = oldHeight * ratio;
+			
+			canvas.style.width = oldWidth + 'px';
+			canvas.style.height = oldHeight + 'px';
+			
+			ctx.scale(ratio, ratio);
+		}
+		*/
+		
+		if (devicePixelRatio !== 1) {
+			var oldWidth = canvas.width;
+			var oldHeight = canvas.height;
+			
+			canvas.width = oldWidth * devicePixelRatio;
+			canvas.height = oldHeight * devicePixelRatio;
+			
+			canvas.style.width = oldWidth + 'px';
+			canvas.style.height = oldHeight + 'px';
+			
+			// ctx.scale(devicePixelRatio, devicePixelRatio);
+		}
+	}
 	
 	// ********
 	// CONTROLS
@@ -117,11 +166,13 @@ function game() {
 	
 	// This prevents scrolling on iPads
 	
+	/*
 	if (isiOS) {
 		document.ontouchmove = function(event) {
 			event.preventDefault();
 		}
 	}
+	*/
 	
 	document.addEventListener("keydown", keyDown, false);
 	document.addEventListener("keyup", keyUp, false);
@@ -329,17 +380,10 @@ function game() {
 			tilt: 90, // variable - paddle direction (0 to 180)
 			speed: 3 // constant - tilt speed
 		},
-		ball: {
-			x: 50, // variable - x position (0 to 100)
-			y: 5, // variable - y position (0 to 75)
-			dx: 0, // variable - horizontal speed
-			dy: 0, // variable - vertical speed
-			direction: 0, // variable - direction (in degrees - 0 is up)
-			colliding: false, // variable - represents collision with paddle
-			cooldown: 0, // variable - 5-frame cooldown for sensing collisions
-			gravity: -0.05, // constant - dy increment representing to gravity
-			size: 3.5, // constant - ball radius (in terms of screen-units)
-			bounciness: 2.2 // constant - speed when bouncing off paddle
+		balls: {
+			data: [new Ball], // list of balls
+			avgBallX: 0, // variable - average ball x position
+			avgBallY: 0 // variable - average ball y position
 		},
 		target: {
 			x: 20, // variable - x position (0 to 100)
@@ -367,6 +411,49 @@ function game() {
 			frame: 0, // variable - the current frame
 		}
 	};
+	
+	/*
+	Ball Class:
+	
+	Properties:
+	x - variable - x position of the ball in screen-units (0 to 100)
+	y - variable - y position of the ball in screen-units (0 to 75)
+	dx - variable - x velocity of the ball in screen-units per frame
+	dy - variable - y velocity of the ball in screen-units per frame
+	direction - variable - direction of the ball in degrees (0 is up)
+	colliding - variable - boolean representing present collision with paddle
+	cooldown - variable - 5-frame cooldown for sensing collisions (0 to 5)
+	gravity - variable - affects dy, increases based on gameSpeed
+	size - constant - ball radius in screen-units
+	bounciness - constant - velocity in screen-units when bouncing off paddle
+	fadeIn - variable - boolean representing if ball is respawning
+	fadeFrame - variable - incremented frame number (0 to 60)
+	fadeFrameTotal - consant - number of frames for respawning
+	*/
+	function Ball(copy) {
+		if (copy) {
+			this.x = system.balls.data[system.balls.data.length - 1].x;
+			this.y = system.balls.data[system.balls.data.length - 1].y;
+			this.dx = system.balls.data[system.balls.data.length - 1].dx;
+			this.dy = system.balls.data[system.balls.data.length - 1].dy;
+			this.fadeFrame = 8;
+			this.fadeFrameTotal = 8;
+		} else {
+			this.x = 50;
+			this.y = 5;
+			this.dx = 0;
+			this.dy = 0;
+			this.fadeFrame = 60;
+			this.fadeFrameTotal = 60;
+		}
+		this.direction = 0;
+		this.colliding = false;
+		this.cooldown = 0;
+		this.gravity = -0.05;
+		this.size = 3.5;
+		this.bounciness = 2.2;
+		this.fadeIn = true;
+	}
 	
 	// Variables for the game's intro
 	var intro = {
@@ -488,7 +575,11 @@ function game() {
 	*/
 	
 	var createCookie = function() {
-	
+		
+		var currentHigh = getCookie();
+		if (currentHigh) {
+			document.cookie = "score=" + escape(currentHigh) + "; expires = Thu, 01 Jan 1970 00:00:01 GMT; path=/";
+		}
 		date = new Date();
 		date.setDate(date.getDate() + 365); // Adds one year
 		document.cookie = "score=" + escape(system.score.high) + "; expires = " + date.toGMTString() + "; path=/";
@@ -576,6 +667,10 @@ function game() {
 		have the message glide from x:40 to x:60. The following 30 frames are
 		spent having the message glide to x:100 and decreasing its opacity
 		to 0.
+		
+		As a convenience, if the user has played before, a message will display
+		in the bottom-right corner to notify the user that they can skip the
+		introduction by pressing space or tapping the screen.
 		*/
 		
 		if (system.stage === 0) {
@@ -597,6 +692,12 @@ function game() {
 				} else {
 					intro.currentMsg++;
 					intro.frame = 0;
+				}
+			}
+			
+			if (system.score.high > 10) { // if the user has played before
+				if (controls.space || ioscontrols.tapping) {
+					system.stage = 1; 
 				}
 			}
 		}
@@ -751,7 +852,7 @@ function game() {
 				var iOSMoveCharacter = function() {
 					
 					var charx = system.character.x;
-					var ballx = system.ball.x;
+					var ballx = system.balls.avgBallX;
 					if (ioscontrols.orientation === 0) {
 						var tiltx = (ioscontrols.xaccel + 3) * 15;
 					} else if (ioscontrols.orientation === 90) {
@@ -785,11 +886,11 @@ function game() {
 			
 				if (controls.right === true) {
 					system.character.dx += system.character.speed;
-					system.character.x = ((system.character.x * 29) + system.ball.x) / 30;
+					system.character.x = ((system.character.x * 29) + system.balls.avgBallX) / 30;
 				}
 				if (controls.left === true) {
 					system.character.dx -= system.character.speed;
-					system.character.x = ((system.character.x * 29) + system.ball.x) / 30;
+					system.character.x = ((system.character.x * 29) + system.balls.avgBallX) / 30;
 				}
 				system.character.dx *= system.character.friction;
 				system.character.x += system.character.dx;
@@ -807,6 +908,144 @@ function game() {
 			}
 			if (system.character.x < 0) {
 				system.character.x = 0;
+			}
+			
+			// ************
+			// Ball updates
+			// ************
+			
+			/*
+			Determines the values of system.balls.avgBallX and
+			system.balls.avgBallY;
+			*/
+			
+			if (system.balls.data.length > 0) {
+				var totalX = 0;
+				var totalY = 0;
+				var totalBalls = system.balls.data.length
+				for (i = 0; i < totalBalls; i++) {
+					totalX += system.balls.data[i].x;
+					totalY += system.balls.data[i].y;
+				}
+				system.balls.avgBallX = totalX / totalBalls;
+				system.balls.avgBallY = totalY / totalBalls;
+			}
+			
+			/*
+			The ball's location and physics and such should not update if the
+			ball is still "fading in" or respawning. This way the player has
+			time to recenter their paddle if they are using the iPad version
+			of the game.
+			*/
+			
+			for (i = 0; i < system.balls.data.length; i++) {
+			
+			if (system.balls.data[i].fadeIn) {
+				
+				system.balls.data[i].fadeFrame--;
+				if (system.balls.data[i].fadeFrame === 0) {
+					system.balls.data[i].fadeIn = false;
+				}
+				
+			} else {
+			
+			/*
+			This changes the ball's y velocity according to the set gravity,
+			and then changes the ball's x and y position based on it's x and y
+			velocities as well as the game speed (which increases when your
+			score gets higher, as a form of added difficulty).
+			*/
+			
+			system.balls.data[i].dy += system.balls.data[i].gravity;
+			
+			system.balls.data[i].x += system.balls.data[i].dx * system.gameSpeed;
+			system.balls.data[i].y -= system.balls.data[i].dy * system.gameSpeed;
+			
+			/*
+			These if statements check to see if the ball has hit the wall -
+			if so, then the ball's x position is reset and the x velocity is
+			inverted.
+			*/
+			
+			if (system.balls.data[i].x > (100 - (system.balls.data[i].size * 0.8))) {
+				system.balls.data[i].x = (100 - (system.balls.data[i].size * 0.8));
+				system.balls.data[i].dx *= -1;
+			}
+			
+			if (system.balls.data[i].x < (system.balls.data[i].size * 0.8)) {
+				system.balls.data[i].x = (system.balls.data[i].size * 0.8);
+				system.balls.data[i].dx *= -1;
+			}
+			
+			/*
+			When the ball falls off the screen, the ball is removed from the
+			array of balls. The iterator (i) has to be decremented to
+			compensate for the removed item (or else one of the balls won't
+			update).
+			*/
+			
+			if (system.balls.data[i].y > 75) {
+				system.balls.data.splice(i, 1);
+				i--;
+			}
+			
+			}
+			
+			}
+			
+			/*
+			This updates the game when the ball reaches the bottom of the
+			screen (aka death). A number of things happens:
+			- gameSpeed is reset to 1 (normal speed)
+			- the ball's x and y positions are reset (to x: 50, y: 5)
+			- the balls x and y velocities are reset (both to 0)
+			- the paddle's tilt is reset to 90
+			- the character's x position and velocity are reset if the player
+			  is playing on a desktop
+			- the highscore is updated if the current score is a new record
+			- the highscore is set to a cookie if the current score is a record
+			- the current score is reset to 0
+			- the fade in / respawn sequence is started for iOS players
+			*/
+			
+			/*
+			if (system.ball.y > 75) {
+				system.gameSpeed = 1;
+				system.ball.x = 50;
+				system.ball.y = 5;
+				system.ball.dy = 0;
+				system.ball.dx = 0;
+				system.paddle.tilt = 90;
+				system.ball.fadeIn = true;
+				system.ball.fadeFrame = system.ball.fadeFrameTotal;
+				if (!isiOS) {
+					system.character.x = 50;
+					system.character.dx = 0;
+				}
+				if (system.score.current > system.score.high) {
+					updateHighScore();
+					createCookie();
+				}
+				system.score.current = 0;
+			}
+			*/
+			
+			if (system.balls.data.length === 0) {
+				system.gameSpeed = 1;
+				system.balls.data.push(new Ball);
+				system.paddle.tilt = 90;
+				/*
+				Reset's the character's position - not sure if necessary
+				if (!isiOS) {
+					system.character.x = 50;
+					system.character.dx = 0;
+				}
+				*/
+				if (system.score.current > system.score.high) {
+					updateHighScore();
+					createCookie();
+				}
+				system.score.current = 0;
 			}
 			
 			// *************
@@ -853,8 +1092,8 @@ function game() {
 					toTarget += 180;
 				}
 				
-				ballX = system.ball.x;
-				ballY = system.ball.y;
+				ballX = system.balls.avgBallX;
+				ballY = system.balls.avgBallY;
 				
 				toBall = mathx.toDegrees(Math.atan((ballY - paddleY) / (ballX - paddleX)));
 				
@@ -890,71 +1129,6 @@ function game() {
 				system.paddle.tilt = 0;
 			}
 			
-			// ************
-			// Ball updates
-			// ************
-			
-			/*
-			This changes the ball's y velocity according to the set gravity,
-			and then changes the ball's x and y position based on it's x and y
-			velocities as well as the game speed (which increases when your
-			score gets higher, as a form of added difficulty).
-			*/
-			
-			system.ball.dy += system.ball.gravity;
-			
-			system.ball.x += system.ball.dx * system.gameSpeed;
-			system.ball.y -= system.ball.dy * system.gameSpeed;
-			
-			/*
-			These if statements check to see if the ball has hit the wall -
-			if so, then the ball's x position is reset and the x velocity is
-			inverted.
-			*/
-			
-			if (system.ball.x > (100 - (system.ball.size * 0.8))) {
-				system.ball.x = (100 - (system.ball.size * 0.8));
-				system.ball.dx *= -1;
-			}
-			
-			if (system.ball.x < (system.ball.size * 0.8)) {
-				system.ball.x = (system.ball.size * 0.8);
-				system.ball.dx *= -1;
-			}
-			
-			/*
-			This updates the game when the ball reaches the bottom of the
-			screen (aka death). A number of things happens:
-			- gameSpeed is reset to 1 (normal speed)
-			- the ball's x and y positions are reset (to x: 50, y: 5)
-			- the balls x and y velocities are reset (both to 0)
-			- the paddle's tilt is reset to 90
-			- the character's x position and velocity are reset if the player
-			  is playing on a desktop
-			- the highscore is updated if the current score is a new record
-			- the highscore is set to a cookie if the current score is a record
-			- the current score is reset to 0
-			*/
-			
-			if (system.ball.y > 75) {
-				system.gameSpeed = 1;
-				system.ball.x = 50;
-				system.ball.y = 5;
-				system.ball.dy = 0;
-				system.ball.dx = 0;
-				system.paddle.tilt = 90;
-				
-				if (!isiOS) {
-					system.character.x = 50;
-					system.character.dx = 0;
-				}
-				if (system.score.current > system.score.high) {
-					updateHighScore();
-					createCookie();
-				}
-				system.score.current = 0;
-			}
-			
 			// *******************
 			// Collision detection
 			// *******************
@@ -983,36 +1157,40 @@ function game() {
 			cannot be detected.
 			*/
 			
-			var ballCollision = function() {
-				
-				/*
-				An array of the coordinates of the paddle's collision box
-				assuming it is tilted upwards - x is relative to the character,
-				y is based on the grid.
-				*/
-				
-				var collpoints = [	-8, 56,
-									-4, 56,
-									0, 56,
-									4, 56,
-									8, 56];
-				
-				// The center of rotation for the paddle
-				
-				var centerx = system.character.x;
-				var centery = 62;
+			var ballCollision = function(num) {
 				
 				// The collision detection system first assumes that there is
 				// no collision, and changes the boolean if necessary:
 				
-				system.ball.colliding = false;
+				system.balls.data[num].colliding = false;
 				
-				if (system.ball.cooldown > 0) {
+				if (system.balls.data[num].cooldown > 0) {
 				
-					system.ball.cooldown--;
+					system.balls.data[num].cooldown--;
 					
 				} else {
-				
+					
+					/*
+					An array of the coordinates of the paddle's collision box
+					assuming it is tilted upwards - x is relative to the
+					character, y is based on the grid.
+					*/
+					
+					var collpoints = [	-8, 56,
+										-4, 56,
+										0, 56,
+										4, 56,
+										8, 56];
+										
+					// The center of rotation for the paddle
+					
+					var centerx = system.character.x;
+					var centery = 62;
+					
+					var ballx = system.balls.data[num].x;
+					var bally = system.balls.data[num].y;
+					var ballsize = system.balls.data[num].size;
+					
 					/*
 					For each of the collpoints, they calculate the correct
 					position of the point (which accounts for the tilt of the
@@ -1026,39 +1204,43 @@ function game() {
 					var temp;
 					
 					temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + collpoints[0], collpoints[1]);
-					if (mathx.distance(temp.x, temp.y, system.ball.x, system.ball.y) < system.ball.size + 1) {
-						system.ball.colliding = true;
-						system.ball.cooldown = 5;
+					if (mathx.distance(temp.x, temp.y, ballx, bally) < ballsize + 1) {
+						system.balls.data[num].colliding = true;
+						system.balls.data[num].cooldown = 5;
 					}
 					temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + collpoints[2], collpoints[3]);
-					if (mathx.distance(temp.x, temp.y, system.ball.x, system.ball.y) < system.ball.size + 1) {
-						system.ball.colliding = true;
-						system.ball.cooldown = 5;
+					if (mathx.distance(temp.x, temp.y, ballx, bally) < ballsize + 1) {
+						system.balls.data[num].colliding = true;
+						system.balls.data[num].cooldown = 5;
 					}
 					temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + collpoints[4], collpoints[5]);
-					if (mathx.distance(temp.x, temp.y, system.ball.x, system.ball.y) < system.ball.size + 1) {
-						system.ball.colliding = true;
-						system.ball.cooldown = 5;
+					if (mathx.distance(temp.x, temp.y, ballx, bally) < ballsize + 1) {
+						system.balls.data[num].colliding = true;
+						system.balls.data[num].cooldown = 5;
 					}
 					temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + collpoints[6], collpoints[7]);
-					if (mathx.distance(temp.x, temp.y, system.ball.x, system.ball.y) < system.ball.size + 1) {
-						system.ball.colliding = true;
-						system.ball.cooldown = 5;
+					if (mathx.distance(temp.x, temp.y, ballx, bally) < ballsize + 1) {
+						system.balls.data[num].colliding = true;
+						system.balls.data[num].cooldown = 5;
 					}
 					temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + collpoints[8], collpoints[9]);
-					if (mathx.distance(temp.x, temp.y, system.ball.x, system.ball.y) < 4) {
-						system.ball.colliding = true;
-						system.ball.cooldown = 5;
+					if (mathx.distance(temp.x, temp.y, ballx, bally) < ballsize + 1) {
+						system.balls.data[num].colliding = true;
+						system.balls.data[num].cooldown = 5;
 					}
 					
 				}
 				
 			}
 			
-			ballCollision();
+			for (i = 0; i < system.balls.data.length; i++) {
+				ballCollision(i);
+			}
 			
-			// Calculates the direction of the ball, used for bouncing
-			system.ball.direction = mathx.toDegrees(Math.atan2(system.ball.dy, system.ball.dx)) - 90;
+			// Calculates the direction of the balls, used for bouncing
+			for (i = 0; i < system.balls.data.length; i++) {
+				system.balls.data[i].direction = mathx.toDegrees(Math.atan2(system.balls.data[i].dy, system.balls.data[i].dx)) - 90;
+			}
 			
 			/*
 			The bounce function is used for when a collision is detected with
@@ -1076,15 +1258,17 @@ function game() {
 			problems.
 			*/
 			
-			var bounce = function(dir) {
+			var bounce = function(num, dir) {
 				// var speed = Math.sqrt(Math.pow(system.ball.dx, 2) + Math.pow(system.ball.dy, 2));
-				system.ball.direction = dir // + (dir - (180 - system.ball.direction));
-				system.ball.dx = system.ball.bounciness * (Math.sin(mathx.toRadians(system.ball.direction)));
-				system.ball.dy = system.ball.bounciness * (Math.cos(mathx.toRadians(system.ball.direction)));
+				system.balls.data[num].direction = dir // + (dir - (180 - system.ball.direction));
+				system.balls.data[num].dx = system.balls.data[num].bounciness * (Math.sin(mathx.toRadians(system.balls.data[num].direction)));
+				system.balls.data[num].dy = system.balls.data[num].bounciness * (Math.cos(mathx.toRadians(system.balls.data[num].direction)));
 			};
 			
-			if (system.ball.colliding) {
-				bounce(system.paddle.tilt - 90);
+			for (i = 0; i < system.balls.data.length; i++) {
+				if (system.balls.data[i].colliding) {
+					bounce(i, system.paddle.tilt - 90);
+				}
 			}
 			
 			// ****************
@@ -1167,28 +1351,34 @@ function game() {
 			it should not be a major problem.
 			*/
 			
-			if (mathx.distance(system.ball.x, system.ball.y, system.target.x, system.target.y) < (system.target.size + system.ball.size)) {
-				system.gameSpeed = 1 + (system.gameAccel * system.score.current);
-				system.ball.gravity = -0.05 - ((system.gameAccel * system.score.current) / 25);
-				if (system.itemDisplay.current === 2) {
-					system.score.current += 2;
-					generateParticles(system.target.x, system.target.y);
-				} else {
-					system.score.current += 1;
-				}
-				system.score.frame = 60;
-				generateParticles(system.target.x, system.target.y);
-				var x, y, i;
-				for (i = 0; i <= 10; i++) {
-					x = 20 + Math.round(Math.random() * 60);
-					y = 10 + Math.round(Math.random() * 35);
-					if (mathx.distance(system.ball.x, system.ball.y, system.target.x, system.target.y) > 30) {
-						i = 11;
+			var targetCollision = function(num) {
+				if (mathx.distance(system.balls.data[num].x, system.balls.data[num].y, system.target.x, system.target.y) < (system.target.size + system.balls.data[num].size)) {
+					system.gameSpeed = 1 + (system.gameAccel * system.score.current);
+					system.balls.data[num].gravity = -0.05 - ((system.gameAccel * system.score.current) / 25);
+					if (system.itemDisplay.current === 2) {
+						system.score.current += 2;
+						generateParticles(system.target.x, system.target.y);
+					} else {
+						system.score.current += 1;
 					}
+					system.score.frame = 60;
+					generateParticles(system.target.x, system.target.y);
+					var x, y, i;
+					for (i = 0; i <= 10; i++) {
+						x = 20 + Math.round(Math.random() * 60);
+						y = 10 + Math.round(Math.random() * 35);
+						if (mathx.distance(system.balls.data[num].x, system.balls.data[num].y, system.target.x, system.target.y) > 30) {
+							i = 11;
+						}
+					}
+					system.target.x = x;
+					system.target.y = y;
+					system.firstFrame = true;
 				}
-				system.target.x = x;
-				system.target.y = y;
-				system.firstFrame = true;
+			}
+			
+			for (i = 0; i < system.balls.data.length; i++) {
+				targetCollision(i);
 			}
 			
 			// ************
@@ -1201,17 +1391,25 @@ function game() {
 			- 0: no item
 			- 1: undetermined item
 			- 2: double points
+			- 3: triple ball
+			- 4: magnet
 			*/
 			
 			var showItemBox = function() {
 				system.itemBox.direction = 45;
 				system.itemBox.appearing = true;
 				
-				var x, y, i;
+				var x, y, i, j, tooClose;
 				for (i = 0; i <= 10; i++) {
 					x = 20 + Math.round(Math.random() * 60);
 					y = 10 + Math.round(Math.random() * 35);
-					if (mathx.distance(system.ball.x, system.ball.y, system.itemBox.x, system.itemBox.y) > 20) {
+					tooClose = false;
+					for (j = 0; j < system.balls.data.length; j++) {
+						if (mathx.distance(system.balls.data[j].x, system.balls.data[j].y, system.itemBox.x, system.itemBox.y) < 20) {
+							tooClose = true;
+						}
+					}
+					if (!tooClose) {
 						i = 11;
 					}
 				}
@@ -1219,15 +1417,15 @@ function game() {
 				system.itemBox.y = y;
 			};
 			
-			var itemCollision = function() {
+			var itemCollision = function(num) {
 				
 				var direction = system.itemBox.direction;
 				var itemx = system.itemBox.x;
 				var itemy = system.itemBox.y;
-				var ballx = system.ball.x;
-				var bally = system.ball.y;
+				var ballx = system.balls.data[num].x;
+				var bally = system.balls.data[num].y;
 				var size = system.itemBox.size;
-				var ballsize = system.ball.size;
+				var ballsize = system.balls.data[num].size;
 				
 				var point1; // vertices of the square
 				var point2; // ...
@@ -1369,12 +1567,13 @@ function game() {
 				
 			};
 			
+			// This rotates the item box
 			system.itemBox.direction += system.itemBox.turnSpeed;
-			
 			if (system.itemBox.direction >= 360) {
 				system.itemBox.direction = 0;
 			}
 			
+			// This ensures the itembox resets upon death
 			if (system.score.current < 10) {
 				system.itemDisplay.displayed = 0;
 				system.itemDisplay.current = 0;
@@ -1386,18 +1585,34 @@ function game() {
 				showItemBox();
 			}
 			
+			var itemBoxCollided = false;
 			if (system.itemBox.appearing === true) {
-				if (itemCollision()) {
+				for (i = 0; i < system.balls.data.length; i++) {
+					if (itemCollision(i)) {
+						itemBoxCollided = true;
+					}
+				}
+				if (itemBoxCollided) {
 					system.itemBox.appearing = false;
 					generateParticles(system.itemBox.x, system.itemBox.y);
-					system.itemDisplay.current = 2;
-					system.itemDisplay.displayed = 2;
-					system.itemDisplay.frame = 600;
+					system.itemDisplay.current = 1;
+					system.itemDisplay.displayed = 1;
+					system.itemDisplay.frame = 660;
 				}
 			}
 			
 			if (system.itemDisplay.frame > 0) {
 				system.itemDisplay.frame--;
+				if (system.itemDisplay.frame === 600) {
+					system.itemDisplay.current = Math.floor(Math.random() * 2) + 2;
+					// system.itemDisplay.current = 4; // for testing
+					system.itemDisplay.displayed = system.itemDisplay.current;
+				}
+				if (system.itemDisplay.frame === 540 || system.itemDisplay.frame === 480) {
+					if (system.itemDisplay.current === 3) {
+						system.balls.data.push(new Ball(true));
+					}
+				}
 			}
 			
 			if (system.itemDisplay.frame === 0) {
@@ -1431,18 +1646,6 @@ function game() {
 	*/
 	
 	function draw() {
-		
-		/*
-		This if statement (which wraps around everything in the draw function)
-		checks to see if the browser is able to draw on the canvas (aka if
-		it is recent enough to support the canvas element). By checking this,
-		we avoid any problems with javascript errors occurring in older
-		browsers.
-		*/
-		
-		if (canvas.getContext) {
-		
-		var ctx = canvas.getContext("2d");
 		
 		// ****************
 		// Black background
@@ -1557,16 +1760,22 @@ function game() {
 			
 		};
 		
-		// ****************
-		// Drawing the ball
-		// ****************
+		// *****************
+		// Drawing the balls
+		// *****************
 		
-		var drawBall = function() {
-		
-			ctx.fillStyle = "#FFF";
-			ctx.beginPath();
-			ctx.arc(((system.ball.x / 100) * canvas.width), ((system.ball.y / 75) * canvas.height), ((canvas.width / 100) * system.ball.size), 0, (Math.PI * 2));
-			ctx.fill();
+		var drawBalls = function() {
+			
+			for (i = 0; i < system.balls.data.length; i++) {
+				var ballOpacity = (1 - (system.balls.data[i].fadeFrame / system.balls.data[i].fadeFrameTotal));
+				var ballX = system.balls.data[i].x;
+				var ballY = system.balls.data[i].y;
+				var ballSize = system.balls.data[i].size;
+				ctx.fillStyle = "rgba(255, 255, 255, " + ballOpacity + ")";
+				ctx.beginPath();
+				ctx.arc(((ballX / 100) * canvas.width), ((ballY / 75) * canvas.height), ((ballSize / 100) * canvas.width), 0, (Math.PI * 2));
+				ctx.fill();
+			}
 			
 		};
 		
@@ -1666,6 +1875,7 @@ function game() {
 		
 		var drawItemDisplay = function() {
 			
+			var opacity;
 			ctx.strokeStyle = "#FFF";
 			ctx.lineWidth = (0.5 / 100 * canvas.width);
 			ctx.beginPath();
@@ -1683,11 +1893,85 @@ function game() {
 			ctx.lineTo((82 / 100 * canvas.width), (13 / 100 * canvas.width));
 			ctx.stroke();
 			
+			// Draw "2x" text
+			var drawDoubleMultiplier = function() {
+				dispMsg("2x", "Trebuchet MS", 8, 90, 10, "#888", "center");
+			};
+			
+			// Draw 3 white balls in a triangular formation
+			var drawTripleBalls = function() {
+				ctx.beginPath();
+				ctx.arc(((90 / 100) * canvas.width), ((7 / 75) * canvas.height), ((2.5 / 100) * canvas.width), 0, (Math.PI * 2));
+				ctx.fill();
+				ctx.beginPath();
+				ctx.arc(((86 / 100) * canvas.width), ((13 / 75) * canvas.height), ((2.5 / 100) * canvas.width), 0, (Math.PI * 2));
+				ctx.fill();
+				ctx.beginPath();
+				ctx.arc(((94 / 100) * canvas.width), ((13 / 75) * canvas.height), ((2.5 / 100) * canvas.width), 0, (Math.PI * 2));
+				ctx.fill();
+			};
+			
+			// Draw magnet
+			var drawMagnet = function() {
+				ctx.fillStyle = "#888";
+				ctx.beginPath();
+				ctx.arc(((90 / 100) * canvas.width), ((10 / 75) * canvas.height), ((5 / 100) * canvas.width), Math.PI, (Math.PI * 2));
+				ctx.moveTo(((95 / 100) * canvas.width), ((10 / 75) * canvas.height));
+				ctx.lineTo(((94 / 100) * canvas.width), ((15 / 75) * canvas.height));
+				ctx.lineTo(((92 / 100) * canvas.width), ((15 / 75) * canvas.height));
+				ctx.lineTo(((93 / 100) * canvas.width), ((10 / 75) * canvas.height));
+				ctx.moveTo(((87 / 100) * canvas.width), ((10 / 75) * canvas.height));
+				ctx.lineTo(((88 / 100) * canvas.width), ((15 / 75) * canvas.height));
+				ctx.lineTo(((86 / 100) * canvas.width), ((15 / 75) * canvas.height));
+				ctx.lineTo(((85 / 100) * canvas.width), ((10 / 75) * canvas.height));
+				ctx.fill();
+				
+				ctx.fillStyle = "#000";
+				ctx.beginPath();
+				ctx.arc(((90 / 100) * canvas.width), ((10 / 75) * canvas.height), ((3 / 100) * canvas.width), Math.PI, (Math.PI * 2));
+				ctx.fill();
+				
+				ctx.fillStyle = "#fff";
+				ctx.beginPath();
+				ctx.moveTo(((85.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
+				ctx.lineTo(((86 / 100) * canvas.width), ((15 / 75) * canvas.height));
+				ctx.lineTo(((88 / 100) * canvas.width), ((15 / 75) * canvas.height));
+				ctx.lineTo(((87.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
+				ctx.lineTo(((85.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
+				
+				ctx.moveTo(((94.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
+				ctx.lineTo(((94 / 100) * canvas.width), ((15 / 75) * canvas.height));
+				ctx.lineTo(((92 / 100) * canvas.width), ((15 / 75) * canvas.height));
+				ctx.lineTo(((92.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
+				ctx.lineTo(((94.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
+				ctx.fill();
+			}
+			
+			var randomItem;
 			if (system.itemDisplay.displayed === 0) {
+				// Draw "no item" text
 				dispMsg("no", "Trebuchet MS", 3, 90, 7.5, "#888", "center");
 				dispMsg("item", "Trebuchet MS", 3, 90, 12.5, "#888", "center");
+			} else if (system.itemDisplay.displayed === 1) {
+				randomItem = system.itemDisplay.frame % 8;
+				if (randomItem < 4) {
+					drawDoubleMultiplier();
+				} else if (randomItem >= 4) {
+					drawTripleBalls();
+				}
 			} else if (system.itemDisplay.displayed === 2) {
-				dispMsg("2x", "Trebuchet MS", 8, 90, 10, "#888", "center");
+				drawDoubleMultiplier();
+			} else if (system.itemDisplay.displayed === 3) {
+				// Draw 3 white balls in a triangular formation
+				if (system.itemDisplay.frame > 300) {
+					opacity = (1 - ((600 - system.itemDisplay.frame) / 300));
+					ctx.fillStyle = "rgba(255, 255, 255, " + opacity + ")";
+					drawTripleBalls();
+				} else {
+					system.itemDisplay.displayed = 0;
+				}
+			} else if (system.itemDisplay.displayed === 4) {
+				drawMagnet();
 			}
 			
 		};
@@ -1802,6 +2086,8 @@ function game() {
 		var drawDebugInfo = function() {
 			
 			dispMsg("fps: " + ((Math.round(currentfps * 10)) / 10), "Trebuchet MS", 2, 0, 72.5, "#FFF", "left");
+			// dispMsg("canvas-width: " + canvas.width, "Trebuchet MS", 5, 0, 10, "#FFF", "left");
+			// dispMsg("window-width: " + window.innerWidth, "Trebuchet MS", 5, 0, 20, "#FFF", "left");
 			// dispMsg("gameSpeed: " + system.gameSpeed, "Trebuchet MS", 2, 100, 9, "#FFF", "right");
 			if (isiOS) {
 				// dispMsg("Using iPad", "Trebuchet MS", 2, 100, 9, "#FFF", "right");
@@ -1888,6 +2174,13 @@ function game() {
 		
 		if (system.stage === 0) {
 			dispMsg(intro.messages[intro.currentMsg], "Trebuchet MS", 4, intro.msgPos, 37.5, "rgba(255, 255, 255, " + (intro.msgOpacity / 100) + ")", "center");
+			if (system.score.high > 10) { // if the user has played before...
+				if (isiOS) {
+					dispMsg("(tap to skip)", "Trebuchet MS", 3, 98, 70, "#fff", "right");
+				} else {
+					dispMsg("(press space to skip)", "Trebuchet MS", 3, 98, 70, "#fff", "right");
+				}
+			}
 		}
 		
 		// ********************
@@ -1936,14 +2229,14 @@ function game() {
 		if (system.stage === 3) {
 			drawScore();
 			drawItemDisplay();
-			if (system.itemDisplay.frame > 0) {
+			if (system.itemDisplay.frame > 0 && system.itemDisplay.current === 2) {
 				drawTimer();
 			}
 			drawTarget();
 			drawItemBox();
 			drawPaddle();
 			drawChar();
-			drawBall();
+			drawBalls();
 			drawParticles();
 			drawHSMsg();
 			if (paused) {
@@ -1960,7 +2253,8 @@ function game() {
 			// drawDebugPoints();
 		}
 		
-		}
+	}
+	
 	}
 	
 }
