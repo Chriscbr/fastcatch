@@ -5,9 +5,6 @@ http://unixpapa.com/js/key.html
 
 https://developer.apple.com/library/safari/documentation/SafariDOMAdditions/Reference/DeviceMotionEventClassRef/DeviceMotionEvent/DeviceMotionEvent.html
 https://developer.apple.com/library/safari/documentation/SafariDOMAdditions/Reference/DeviceOrientationEventClassRef/DeviceOrientationEvent/DeviceOrientationEvent.html
-
-Although only the y acceleration of the iPad is currently used in the game, the
-game still keeps track of the other variables for potential later use.
 */
 
 function Input() {
@@ -44,6 +41,7 @@ function Input() {
 
 }
 
+// Adds event listeners for desktop controls
 Input.prototype.listen = function () {
   
   var self = this;
@@ -104,6 +102,7 @@ Input.prototype.listen = function () {
 
 };
 
+// Adds event listeners for iOS controls
 Input.prototype.iOSlisten = function () {
   
   var self = this;

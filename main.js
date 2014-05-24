@@ -138,12 +138,12 @@ function game() {
         // ctx.scale(devicePixelRatio, devicePixelRatio);
       }
     }
-    
+
     // ********
     // CONTROLS
     // ********
-    
-    var input = new Input;
+
+    var input = new Input();
     var controls = input.controls;
     var ioscontrols = input.ioscontrols;
 
@@ -219,7 +219,29 @@ function game() {
         current: 0, // variable - the current item the user actually has
         displayed: 0, // variable - the item displayed (part of animation)
         frame: 0 // variable - the current frame
-      }
+      },
+      currentfps: 0, // variable - the current FPS
+      intro: {
+        messages: ["can you beat the highscore?"],
+        currentMsg: 0, // msg num currently displayed, if messages.length > 1
+        msgPos: 0, // variable - x position (0 to 100)
+        msgOpacity: 0, // variable - transparency (0 - clear to 100 - opaque)
+        frame: 1 // frames for animation (1 to 180)
+      },
+      title: {
+        frame: 0, // frames for animation (1 to 60)
+        titleOpacity: 0, // variable - transparency (0 - clear to 100 - opaque)
+        buttonOpacity: 0 // variable - transparency ""
+      },
+      instructions: {
+        unpressed: false, // variable - if the button has been unpressed
+        // since entering the menu
+        repressed: false, // variable - if the button has been repressed
+        // since being unpressed
+        reunpressed: false
+      },
+      paused: false, // variable - if the game is paused
+      isiOS: isiOS // constant
     };
 
     /*
@@ -313,13 +335,15 @@ function game() {
     var pauseFrames = 0;
     var paused = false;
     var pauseReleased = false;
+    
+    var drawer = new Draw(canvas, system);
 
     function gameLoop() {
 
       if (!paused) {
         update();
       }
-      draw();
+      drawer.render();
 
       thisLoop = new Date();
       if (thisLoop - lastLoop === 0) {
@@ -364,6 +388,9 @@ function game() {
           pauseReleased = false;
         }
       }
+
+      system.currentfps = currentfps;
+      system.paused = paused;
 
     }
 
@@ -411,59 +438,7 @@ function game() {
       system.score.high = getCookie();
     }
 
-    // **************
-    // Math functions
-    // **************
-
-    /*
-	Some mathematical functions are used in my game that aren't natively
-	included in javscript - such as conversions from degrees to radians, and
-	other functions. To keep these methods easily accessible throughout the
-	program (in both the update() and render() functions), I included them in
-	an object named mathx (to avoid confusion with Math).
-	*/
-
-    var mathx = {};
-
-    // Converts radians to degrees
-    mathx.toDegrees = function (rad) {
-      return ((rad * 180) / Math.PI);
-    };
-
-    // Converts degrees to radians
-    mathx.toRadians = function (deg) {
-      return ((deg * Math.PI) / 180);
-    };
-
-    // Determines the distance between two coordinates
-    mathx.distance = function (x1, y1, x2, y2) {
-      return Math.sqrt(((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1)));
-    };
-
-    /*
-	Rotates a given number of radians counterclockwise around a center point
-	See https://en.wikipedia.org/wiki/Rotation_(mathematics) for more info
-	Based on this code: http://stackoverflow.com/questions/3162643/proper-trigonometry-for-rotating-a-point-around-the-origin
-	*/
-
-    mathx.rotatePoint = function (cx, cy, angle, px, py) {
-      var s = Math.sin(angle);
-      var c = Math.cos(angle);
-
-      px -= cx;
-      py -= cy;
-
-      var xnew = px * c - py * s;
-      var ynew = px * s + py * c;
-
-      var pxnew = xnew + cx;
-      var pynew = ynew + cy;
-
-      return {
-        x: pxnew,
-        y: pynew
-      };
-    };
+    var mathx = new Math2();
 
     function update() {
 
@@ -516,6 +491,8 @@ function game() {
           }
         }
       }
+      
+      system.intro = intro;
 
       // ***************
       // 1 - Menu Screen
@@ -559,6 +536,8 @@ function game() {
           }
         }
       }
+      
+      system.title = title;
 
       // ****************
       // 2 - Instructions
@@ -601,6 +580,8 @@ function game() {
           }
         }
       }
+      
+      system.instructions = instructions;
 
       // *************
       // 3 - Main Game
@@ -844,7 +825,7 @@ function game() {
 			- the balls x and y velocities are reset (both to 0)
 			- the paddle's tilt is reset to 90
 			- the character's x position and velocity are reset if the player
-			  is playing on a desktop
+              is playing on a desktop
 			- the highscore is updated if the current score is a new record
 			- the highscore is set to a cookie if the current score is a record
 			- the current score is reset to 0
@@ -1103,7 +1084,7 @@ function game() {
 
         var bounce = function (num, dir) {
           // var speed = Math.sqrt(Math.pow(system.ball.dx, 2) + Math.pow(system.ball.dy, 2));
-          system.balls.data[num].direction = dir // + (dir - (180 - system.ball.direction));
+          system.balls.data[num].direction = dir; // + (dir - (180 - system.ball.direction));
           system.balls.data[num].dx = system.balls.data[num].bounciness * (Math.sin(mathx.toRadians(system.balls.data[num].direction)));
           system.balls.data[num].dy = system.balls.data[num].bounciness * (Math.cos(mathx.toRadians(system.balls.data[num].direction)));
         };
@@ -1151,7 +1132,7 @@ function game() {
               system.particles.data.push(data);
             }
           }
-        }
+        };
 
         var updateParticles = function () {
           var i;
@@ -1165,7 +1146,7 @@ function game() {
               system.particles.data.splice(i, 1);
             }
           }
-        }
+        };
 
         updateParticles();
 
@@ -1181,7 +1162,7 @@ function game() {
 			- gravity increases (to compensate for the gameSpeed)
 			- the score increases
 			- the "frames" variable for the score (which makes it flash) is
-			  reset to 60
+              reset to 60
 			- particles are generated
 			- the target is moved to a new position
 			- firstFrame is set to true
@@ -1199,7 +1180,7 @@ function game() {
             system.gameSpeed = 1 + (system.gameAccel * system.score.current);
             system.balls.data[num].gravity = -0.05 - ((system.gameAccel * system.score.current) / 25);
             if (system.itemDisplay.current === 2) {
-              system.score.current += 2;
+              system.score.current += 3;
               generateParticles(system.target.x, system.target.y);
             } else {
               system.score.current += 1;
@@ -1219,7 +1200,7 @@ function game() {
             system.target.y = y;
             system.firstFrame = true;
           }
-        }
+        };
 
         for (i = 0; i < system.balls.data.length; i++) {
           targetCollision(i);
@@ -1234,7 +1215,7 @@ function game() {
 			are as follows:
 			- 0: no item
 			- 1: undetermined item
-			- 2: double points
+			- 2: triple points
 			- 3: triple ball
 			- 4: magnet
 			*/
@@ -1475,666 +1456,6 @@ function game() {
 
         system.firstFrame = false;
 
-      }
-
-    }
-
-    // ******************
-    // RENDERING THE GAME
-    // ******************
-
-    /*
-	To structure and modularize the code, all of the functions for drawing
-	different objects are defined first, and then they are called at the end
-	based on what stage the program is at (main menu, instructions, etc.) and
-	whether debug mode is enabled.
-	
-	Note: I seem to use a variety of hexcodes (#abcdef) and rgba color values
-	(rgba(0, 1, 2, 0.5)). I try to use hex codes for most normal colors, and
-	rgba values for when opacity is involved.
-	*/
-
-    function draw() {
-
-      var colors = {
-        BLACK: "rgba(0, 0, 0, 1)",
-        DARKGRAY: "rgba(85, 85, 85, 1)",
-        LIGHTGRAY: "rgba(170, 170, 170, 1)",
-        WHITE: "rgba(255, 255, 255, 1)"
-      };
-
-      // ****************
-      // Black background
-      // ****************
-
-      ctx.fillStyle = colors.BLACK;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // ***************
-      // Displaying text
-      // ***************
-
-      /*
-		While text can be displayed for each part of the program using the
-		raw canvas methods, after having to write many of these statements,
-		I decided to write a method to simplify things. Now the dispMsg()
-		method does have a lot of parameters, but that allows for me to
-		customize things easily. Here are what the parameters do:
-		- text: the text that appears
-		- font: the font that is used (mostly Trebuchet MS in my game)
-		- fontsize: the fontsize based on the screen-unit system I have, ex.
-		  fontsize 50 would take up half of the screen, 10 would take up 1/10
-		- x: the x position of the text (in screen-units)
-		- y: the y position of the text (in screen-units)
-		- color: the color of the text (usually white)
-		- alignment: the alignment of the text: "left", "right", or "center"
-		
-		Most of it is self-explanatory, though alignment helps me display
-		text for different purposes, like "center" for the main menu, "left"
-		for the high score, or "right" for debug info on the right side of
-		the screen. Based on the alignments the x and y values are treated
-		differently. For the y specifically, if it is "center" then the y
-		value represents the center of the text, and if it is "right" or
-		"left" then it represents the top of the text.
-		*/
-
-      var dispMsg = function (text, font, fontsize, x, y, color, alignment) {
-
-        ctx.font = (fontsize * canvas.height / 70) + "pt " + font;
-        ctx.fillStyle = color;
-        ctx.textAlign = alignment;
-        if (alignment === "center") {
-          ctx.fillText(text, x * (canvas.width / 100), (y * (canvas.height / 75)) + (fontsize * canvas.height / 140));
-        } else if (alignment === "left") {
-          ctx.fillText(text, x * (canvas.width / 100), (y * (canvas.height / 75)) + (fontsize * canvas.height / 70));
-        } else if (alignment === "right") {
-          ctx.fillText(text, x * (canvas.width / 100), (y * (canvas.height / 75)) + (fontsize * canvas.height / 70));
-        }
-
-      };
-
-      // *********************
-      // Drawing the character
-      // *********************
-
-      /*
-		Since the character is always a rectangle that is never rotated (and
-		the y position stays the same), it is relatively easy to render the
-		character. (At least as it is now).
-		*/
-
-      var drawChar = function () {
-
-        ctx.fillStyle = colors.DARKGRAY;
-        ctx.beginPath();
-        ctx.moveTo(((system.character.x - 2) / 100 * canvas.width), (canvas.height / 75 * 60));
-        ctx.lineTo(((system.character.x + 2) / 100 * canvas.width), (canvas.height / 75 * 60));
-        ctx.lineTo(((system.character.x + 2) / 100 * canvas.width), canvas.height);
-        ctx.lineTo(((system.character.x - 2) / 100 * canvas.width), canvas.height);
-        ctx.fill();
-
-      };
-
-      // ******************
-      // Drawing the paddle
-      // ******************
-
-      /*
-		This function isn't too complex in itself except for the fact that it
-		requires the mathx.rotatePoint() method for rendering it.
-		*/
-
-      var drawPaddle = function () {
-
-        // Center of the paddle (for rotation)
-        var centerx = system.character.x;
-        var centery = 62;
-
-        // Coordinates of the paddle's points assuming it is tilted
-        // upwards - x is relative to the character, y is based on grid
-        var x1 = -8;
-        var y1 = 56;
-        var x2 = 8;
-        var y2 = 56;
-        var x3 = 8;
-        var y3 = 60;
-        var x4 = -8;
-        var y4 = 60;
-
-        var temp; // temporary coordinate used for rotation
-        ctx.fillStyle = colors.DARKGRAY;
-        ctx.beginPath();
-        temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + x1, y1);
-        ctx.moveTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-        temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + x2, y2);
-        ctx.lineTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-        temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + x3, y3);
-        ctx.lineTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-        temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(system.paddle.tilt - 90), system.character.x + x4, y4);
-        ctx.lineTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-        ctx.fill();
-
-      };
-
-      // *****************
-      // Drawing the balls
-      // *****************
-
-      var drawBalls = function () {
-
-        for (i = 0; i < system.balls.data.length; i++) {
-          var ballOpacity = (1 - (system.balls.data[i].fadeFrame / system.balls.data[i].fadeFrameTotal));
-          var ballX = system.balls.data[i].x;
-          var ballY = system.balls.data[i].y;
-          var ballSize = system.balls.data[i].size;
-          ctx.fillStyle = "rgba(255, 255, 255, " + ballOpacity + ")";
-          ctx.beginPath();
-          ctx.arc(((ballX / 100) * canvas.width), ((ballY / 75) * canvas.height), ((ballSize / 100) * canvas.width), 0, (Math.PI * 2));
-          ctx.fill();
-        }
-
-      };
-
-      // ******************
-      // Drawing the target
-      // ******************
-
-      var drawTarget = function () {
-
-        ctx.fillStyle = colors.DARKGRAY;
-        ctx.beginPath();
-        ctx.arc(((system.target.x / 100) * canvas.width), ((system.target.y / 75) * canvas.height), ((canvas.width / 100) * system.target.size), 0, (Math.PI * 2));
-        ctx.fill();
-        ctx.fillStyle = colors.LIGHTGRAY;
-        ctx.beginPath();
-        ctx.arc(((system.target.x / 100) * canvas.width), ((system.target.y / 75) * canvas.height), ((canvas.width / 100) * (system.target.size * 2 / 3)), 0, (Math.PI * 2));
-        ctx.fill();
-        ctx.fillStyle = colors.DARKGRAY;
-        ctx.beginPath();
-        ctx.arc(((system.target.x / 100) * canvas.width), ((system.target.y / 75) * canvas.height), ((canvas.width / 100) * (system.target.size * 1 / 3)), 0, (Math.PI * 2));
-        ctx.fill();
-
-      };
-
-      // ********************
-      // Drawing the item box
-      // ********************
-
-      /*
-		Since I couldn't figure out a reasonable way to make the box curved
-		using the arc method that wouldn't simply require trial and error, I
-		decided to use the quadratic curve method (although it might not be
-		that fast).
-		
-		The item box is made of four straight lines, and four curved lines.
-		In the center there is question mark - which I've made in Verdana for
-		now.
-		*/
-
-      var drawItemBox = function () {
-
-        if (system.itemBox.appearing) {
-
-          // Some variables are re-declared just to keep the code shorter
-          var direction = system.itemBox.direction;
-          var centerx = system.itemBox.x;
-          var centery = system.itemBox.y;
-          var size = system.itemBox.size;
-          var temp; // variable used for storing a temporary point
-          var temp2; // variable used for storing another temp point
-
-          ctx.fillStyle = colors.DARKGRAY;
-          ctx.beginPath();
-
-          temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx - (0.3 * size), centery - (size * 0.5));
-          ctx.moveTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-
-          temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx + (0.3 * size), centery - (size * 0.5));
-          ctx.lineTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-
-          temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx + (0.5 * size), centery - (size * 0.3));
-          temp2 = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx + (0.5 * size), centery - (size * 0.5));
-          ctx.quadraticCurveTo((temp2.x / 100 * canvas.width), (temp2.y / 100 * canvas.width), (temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-
-          temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx + (0.5 * size), centery + (size * 0.3));
-          ctx.lineTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-
-          temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx + (0.3 * size), centery + (size * 0.5));
-          temp2 = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx + (0.5 * size), centery + (size * 0.5));
-          ctx.quadraticCurveTo((temp2.x / 100 * canvas.width), (temp2.y / 100 * canvas.width), (temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-
-          temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx - (0.3 * size), centery + (size * 0.5));
-          ctx.lineTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-
-          temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx - (0.5 * size), centery + (size * 0.3));
-          temp2 = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx - (0.5 * size), centery + (size * 0.5));
-          ctx.quadraticCurveTo((temp2.x / 100 * canvas.width), (temp2.y / 100 * canvas.width), (temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-
-          temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx - (0.5 * size), centery - (size * 0.3));
-          ctx.lineTo((temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-
-          temp = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx - (0.3 * size), centery - (size * 0.5));
-          temp2 = mathx.rotatePoint(centerx, centery, mathx.toRadians(direction), centerx - (0.5 * size), centery - (size * 0.5));
-          ctx.quadraticCurveTo((temp2.x / 100 * canvas.width), (temp2.y / 100 * canvas.width), (temp.x / 100 * canvas.width), (temp.y / 100 * canvas.width));
-
-          ctx.fill();
-
-          dispMsg("?", "Verdana", (size * 0.75), centerx, centery, "#FFF", "center");
-
-        }
-
-      }
-
-      // ************************
-      // Drawing the item display
-      // ************************
-
-      var drawItemDisplay = function () {
-
-        var opacity;
-        ctx.strokeStyle = colors.WHITE;
-        ctx.lineWidth = (0.5 / 100 * canvas.width);
-        ctx.beginPath();
-        ctx.moveTo((82 / 100 * canvas.width), (7 / 100 * canvas.width));
-        ctx.lineTo((82 / 100 * canvas.width), (2 / 100 * canvas.width));
-        ctx.lineTo((87 / 100 * canvas.width), (2 / 100 * canvas.width));
-        ctx.moveTo((93 / 100 * canvas.width), (2 / 100 * canvas.width));
-        ctx.lineTo((98 / 100 * canvas.width), (2 / 100 * canvas.width));
-        ctx.lineTo((98 / 100 * canvas.width), (7 / 100 * canvas.width));
-        ctx.moveTo((98 / 100 * canvas.width), (13 / 100 * canvas.width));
-        ctx.lineTo((98 / 100 * canvas.width), (18 / 100 * canvas.width));
-        ctx.lineTo((93 / 100 * canvas.width), (18 / 100 * canvas.width));
-        ctx.moveTo((87 / 100 * canvas.width), (18 / 100 * canvas.width));
-        ctx.lineTo((82 / 100 * canvas.width), (18 / 100 * canvas.width));
-        ctx.lineTo((82 / 100 * canvas.width), (13 / 100 * canvas.width));
-        ctx.stroke();
-
-        // Draw "2x" text
-        var drawDoubleMultiplier = function () {
-          dispMsg("2x", "Trebuchet MS", 8, 90, 10, colors.DARKGRAY, "center");
-        };
-
-        // Draw 3 white balls in a triangular formation
-        var drawTripleBalls = function () {
-          ctx.beginPath();
-          ctx.arc(((90 / 100) * canvas.width), ((7 / 75) * canvas.height), ((2.5 / 100) * canvas.width), 0, (Math.PI * 2));
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(((86 / 100) * canvas.width), ((13 / 75) * canvas.height), ((2.5 / 100) * canvas.width), 0, (Math.PI * 2));
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(((94 / 100) * canvas.width), ((13 / 75) * canvas.height), ((2.5 / 100) * canvas.width), 0, (Math.PI * 2));
-          ctx.fill();
-        };
-
-        // Draw magnet
-        var drawMagnet = function () {
-          ctx.fillStyle = colors.DARKGRAY;
-          ctx.beginPath();
-          ctx.arc(((90 / 100) * canvas.width), ((10 / 75) * canvas.height), ((5 / 100) * canvas.width), Math.PI, (Math.PI * 2));
-          ctx.moveTo(((95 / 100) * canvas.width), ((10 / 75) * canvas.height));
-          ctx.lineTo(((94 / 100) * canvas.width), ((15 / 75) * canvas.height));
-          ctx.lineTo(((92 / 100) * canvas.width), ((15 / 75) * canvas.height));
-          ctx.lineTo(((93 / 100) * canvas.width), ((10 / 75) * canvas.height));
-          ctx.moveTo(((87 / 100) * canvas.width), ((10 / 75) * canvas.height));
-          ctx.lineTo(((88 / 100) * canvas.width), ((15 / 75) * canvas.height));
-          ctx.lineTo(((86 / 100) * canvas.width), ((15 / 75) * canvas.height));
-          ctx.lineTo(((85 / 100) * canvas.width), ((10 / 75) * canvas.height));
-          ctx.fill();
-
-          ctx.fillStyle = colors.BLACK;
-          ctx.beginPath();
-          ctx.arc(((90 / 100) * canvas.width), ((10 / 75) * canvas.height), ((3 / 100) * canvas.width), Math.PI, (Math.PI * 2));
-          ctx.fill();
-
-          ctx.fillStyle = colors.WHITE;;
-          ctx.beginPath();
-          ctx.moveTo(((85.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
-          ctx.lineTo(((86 / 100) * canvas.width), ((15 / 75) * canvas.height));
-          ctx.lineTo(((88 / 100) * canvas.width), ((15 / 75) * canvas.height));
-          ctx.lineTo(((87.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
-          ctx.lineTo(((85.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
-
-          ctx.moveTo(((94.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
-          ctx.lineTo(((94 / 100) * canvas.width), ((15 / 75) * canvas.height));
-          ctx.lineTo(((92 / 100) * canvas.width), ((15 / 75) * canvas.height));
-          ctx.lineTo(((92.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
-          ctx.lineTo(((94.5 / 100) * canvas.width), ((12.5 / 75) * canvas.height));
-          ctx.fill();
-        }
-
-        var randomItem;
-        if (system.itemDisplay.displayed === 0) {
-          // Draw "no item" text
-          dispMsg("no", "Trebuchet MS", 3, 90, 7.5, colors.DARKGRAY, "center");
-          dispMsg("item", "Trebuchet MS", 3, 90, 12.5, colors.DARKGRAY, "center");
-        } else if (system.itemDisplay.displayed === 1) {
-          randomItem = system.itemDisplay.frame % 9;
-          if (randomItem < 3) {
-            drawDoubleMultiplier();
-          } else if (randomItem < 6) {
-            drawTripleBalls();
-          } else {
-            drawMagnet();
-          }
-        } else if (system.itemDisplay.displayed === 2) {
-          drawDoubleMultiplier();
-        } else if (system.itemDisplay.displayed === 3) {
-          // Draw 3 white balls in a triangular formation
-          if (system.itemDisplay.frame > 300) {
-            opacity = (1 - ((600 - system.itemDisplay.frame) / 300));
-            ctx.fillStyle = "rgba(255, 255, 255, " + opacity + ")";
-            drawTripleBalls();
-          } else {
-            system.itemDisplay.displayed = 0;
-          }
-        } else if (system.itemDisplay.displayed === 4) {
-          drawMagnet();
-        }
-
-      };
-
-      // ********************
-      // Displaying the timer
-      // ********************
-
-      var drawTimer = function () {
-
-        dispMsg(Math.ceil(system.itemDisplay.frame / 60), "Trebuchet MS", 4, 76, 10, "#FFF", "center");
-        ctx.fillStyle = colors.WHITE;
-        ctx.beginPath();
-        ctx.arc(((68 / 100) * canvas.width), ((10 / 75) * canvas.height), ((canvas.width / 100) * 4), 0, (Math.PI * 2));
-        ctx.fill();
-        ctx.fillStyle = colors.DARKGRAY;
-        ctx.beginPath();
-        ctx.arc(((68 / 100) * canvas.width), ((10 / 75) * canvas.height), ((canvas.width / 100) * 3.5), 0, (Math.PI * 2));
-        ctx.fill();
-        ctx.fillStyle = colors.BLACK;
-        ctx.beginPath();
-        ctx.arc(((68 / 100) * canvas.width), ((10 / 75) * canvas.height), ((canvas.width / 100) * 3.5), (Math.PI * 1.5), (Math.PI * 1.5) + ((Math.PI * 2) * ((0 - system.itemDisplay.frame) / 600)), false);
-        ctx.lineTo(((68 / 100) * canvas.width), ((10 / 75) * canvas.height));
-        ctx.fill();
-
-      };
-
-      // *********************
-      // Drawing the particles
-      // *********************
-
-      var drawParticles = function () {
-
-        var i;
-        for (i = 0; i < system.particles.data.length; i++) {
-          var renderx = (system.particles.data[i].x / 100) * canvas.width;
-          var rendery = (system.particles.data[i].y / 100) * canvas.width;
-          var renderw = (system.particles.width / 100) * canvas.width;
-          ctx.fillStyle = colors.WHITE;
-          ctx.fillRect(renderx, rendery, renderw, renderw);
-        }
-
-      }
-
-      // ******************
-      // Drawing the scores
-      // ******************
-
-      /*
-		Self explanatory, except that for displaying the large score in the
-		background, the opacity has to be determined - the base value is 0.2.
-		*/
-
-      var drawScore = function () {
-
-        dispMsg(system.score.current, "Trebuchet MS", 45, 100, 25, "rgba(255, 255, 255, " + (0.2 + ((system.score.frame / 60) * 0.8)) + ")", "right");
-        dispMsg("high score:", "Trebuchet MS", 3, 1, 4, colors.WHITE, "left");
-        dispMsg(system.score.high, "Trebuchet MS", 6, 23, 1, colors.WHITE, "left");
-
-      };
-
-      // ******************************
-      // Drawing the high score message
-      // ******************************
-
-      /*
-		This draws the message that appears when you get a new high score.
-		Two parts change: the message's opacity and y-position. It goes upwards
-		as time goes on, and fades away, both for aesthetic purposes.
-		*/
-
-      var drawHSMsg = function () {
-
-        if (system.score.HSframe > 0) {
-          progress = (system.score.HSlength - system.score.HSframe) / system.score.HSlength;
-          dispMsg("new high score!", "Trebuchet MS", 8, 50, 33.5 - (progress * 10), "rgba(255, 255, 255, " + (1 - progress) + ")", "center");
-        }
-
-      }
-
-      // *********************
-      // Display pause overlay
-      // *********************
-
-      var drawPauseOverlay = function () {
-
-        ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        dispMsg("paused", "Trebuchet MS", 8, 50, 30, colors.WHITE, "center");
-        if (isiOS) {
-          dispMsg("(double tap to continue)", "Trebuchet MS", 3, 50, 40, colors.WHITE, "center");
-        } else {
-          dispMsg("(press space to continue)", "Trebuchet MS", 3, 50, 40, colors.WHITE, "center");
-        }
-
-      }
-
-      // ******************
-      // Drawing debug info
-      // ******************
-
-      /*
-		There are a lot of different pieces of debug info that are useful for
-		different parts of development. Often this means displaying variables
-		to see if a particular piece of code is working, or displaying the
-		input that the program can detect to see if the controls are working.
-		
-		Also, it can display different debug info depending on the device
-		being used, which is handy.
-		*/
-
-      var drawDebugInfo = function () {
-
-        dispMsg("fps: " + ((Math.round(currentfps * 10)) / 10), "Trebuchet MS", 2, 0, 72.5, colors.WHITE, "left");
-        // dispMsg("canvas-width: " + canvas.width, "Trebuchet MS", 5, 0, 10, "#FFF", "left");
-        // dispMsg("window-width: " + window.innerWidth, "Trebuchet MS", 5, 0, 20, "#FFF", "left");
-        // dispMsg("gameSpeed: " + system.gameSpeed, "Trebuchet MS", 2, 100, 9, "#FFF", "right");
-        if (isiOS) {
-          // dispMsg("Using iPad", "Trebuchet MS", 2, 100, 9, "#FFF", "right");
-          // dispMsg("YAccel: " + ((Math.round(ioscontrols.yaccel * 10)) / 10), "Trebuchet MS", 2, 100, 11.5, "#FFF", "right");
-          // dispMsg("Tapping?: " + ioscontrols.tapping, "Trebuchet MS", 2, 100, 14, "#FFF", "right");
-        } else {
-          // dispMsg("Not using iPad", "Trebuchet MS", 2, 100, 9, "#FFF", "right");
-        }
-        // dispMsg("v. 2.1_05 (b26)", "Trebuchet MS", 3, 0, 70, "#FFF", "left");
-        // dispMsg("sys.char.dx: " + ((Math.round(system.character.dx * 10)) / 10), "Trebuchet MS", 24, 100, 50, "#FFF");
-        // dispMsg("Mouse X: " + controls.mouseX + " (" + ((Math.round((controls.mouseX / (canvas.width / 100)) * 10)) / 10) + ")", "Trebuchet MS", 3, 100, 9, "#FFF", "right");
-        // dispMsg("Mouse Y: " + controls.mouseY + " (" + ((Math.round((controls.mouseY / (canvas.height / 75)) * 10)) / 10) + ")", "Trebuchet MS", 3, 100, 13, "#FFF", "right");
-        // dispMsg("BallDx: " + ((Math.round(system.ball.dx * 10)) / 10), "Trebuchet MS", 3, 1, 17, "#FFF");
-        // dispMsg("Colliding?: " + system.ball.colliding, "Trebuchet MS", 3, 1, 13, "#FFF");
-
-      }
-
-      // ********************
-      // Drawing debug points
-      // ********************
-
-      var drawDebugPoints = function () {
-
-        var direction = system.itemBox.direction;
-        var itemx = system.itemBox.x;
-        var itemy = system.itemBox.y;
-        var size = system.itemBox.size;
-        var ballsize = system.ball.size;
-
-        var point1; // vertices of the square
-        var point2; // ...
-        var point3; // ...
-        var point4; // ...
-
-        point1 = mathx.rotatePoint(itemx, itemy, mathx.toRadians(direction), itemx - ((0.5 * size) + ballsize), itemy - ((0.5 * size) + ballsize));
-        point2 = mathx.rotatePoint(itemx, itemy, mathx.toRadians(direction), itemx + ((0.5 * size) + ballsize), itemy - ((0.5 * size) + ballsize));
-        point3 = mathx.rotatePoint(itemx, itemy, mathx.toRadians(direction), itemx - ((0.5 * size) + ballsize), itemy + ((0.5 * size) + ballsize));
-        point4 = mathx.rotatePoint(itemx, itemy, mathx.toRadians(direction), itemx + ((0.5 * size) + ballsize), itemy + ((0.5 * size) + ballsize));
-
-        ctx.fillStyle = "#0000FF";
-        ctx.beginPath();
-        ctx.arc((point1.x / 100 * canvas.width), (point1.y / 100 * canvas.width), (1 / 100 * canvas.width), 0, (Math.PI * 2));
-        ctx.arc((point2.x / 100 * canvas.width), (point2.y / 100 * canvas.width), (1 / 100 * canvas.width), 0, (Math.PI * 2));
-        ctx.arc((point3.x / 100 * canvas.width), (point3.y / 100 * canvas.width), (1 / 100 * canvas.width), 0, (Math.PI * 2));
-        ctx.arc((point4.x / 100 * canvas.width), (point4.y / 100 * canvas.width), (1 / 100 * canvas.width), 0, (Math.PI * 2));
-        ctx.fill();
-
-      }
-
-      // ******************
-      // Drawing debug grid
-      // ******************
-
-      /*
-		Although I don't typically have to use it often, the debug grid can
-		come useful for determining where to position/space text and designing
-		new objects for the screen to see if they are the right size.
-		
-		It's important because measurements of sizes and positions in the game
-		are made using screen-units, so the width is 100 no matter the actual
-		size of the browser. This makes measuring in pixels redundant.
-		*/
-
-      var drawDebugGrid = function () {
-
-        ctx.strokeStyle = colors.WHITE;
-        ctx.beginPath();
-        var i;
-        for (i = 1; i <= 100; i++) {
-          ctx.moveTo((canvas.width / 100) * i, 0);
-          ctx.lineTo((canvas.width / 100) * i, canvas.height);
-        }
-        for (i = 1; i <= 75; i++) {
-          ctx.moveTo(0, (canvas.height / 75) * i);
-          ctx.lineTo(canvas.width, (canvas.height / 75) * i);
-        }
-        ctx.stroke();
-
-      }
-
-      // *************************
-      // Displaying intro messages
-      // *************************
-
-      if (system.stage === 0) {
-        dispMsg(intro.messages[intro.currentMsg], "Trebuchet MS", 4, intro.msgPos, 37.5, "rgba(255, 255, 255, " + (intro.msgOpacity / 100) + ")", "center");
-        if (system.score.high > 10) { // if the user has played before...
-          if (isiOS) {
-            dispMsg("(tap to skip)", "Trebuchet MS", 3, 98, 70, colors.WHITE, "right");
-          } else {
-            dispMsg("(press space to skip)", "Trebuchet MS", 3, 98, 70, colors.WHITe, "right");
-          }
-        }
-      }
-
-      // ********************
-      // Displaying menu text
-      // ********************
-
-      if (system.stage === 1) {
-        dispMsg("fast catch", "Trebuchet MS", 10, 50, 28, "rgba(255, 255, 255, " + (title.titleOpacity / 100) + ")", "center");
-        dispMsg("start", "Trebuchet MS", 6, 50, 45, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
-        if (isiOS) {
-          dispMsg("(tap the screen)", "Trebuchet MS", 3, 50, 52, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
-        } else {
-          dispMsg("(press space)", "Trebuchet MS", 3, 50, 52, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
-        }
-      }
-
-      // ***********************
-      // Displaying instructions
-      // ***********************
-
-      /*
-		Note: it was originally difficult/impossible to get the "arrow"
-		symbols to appear because of the encoding of the file (ANSI) - but
-		when I changed it to UTF-8 it worked fine.
-		
-		Resource: http://dev.w3.org/html5/html-author/charref
-		*/
-
-      if (system.stage === 2) {
-        if (isiOS) {
-          dispMsg("hold your iPad sideways", "Trebuchet MS", 4, 50, 20, colors.WHITE, "center");
-          dispMsg("tilt your iPad to move the paddle", "Trebuchet MS", 4, 50, 30, colors.WHITE, "center");
-          dispMsg("double tap to pause", "Trebuchet MS", 4, 50, 40, colors.WHITE, "center");
-          dispMsg("(tap the screen to start)", "Trebuchet MS", 3, 50, 50, colors.WHITe, "center");
-        } else {
-          dispMsg("use ← and → to move", "Trebuchet MS", 4, 50, 25, colors.WHITE, "center");
-          dispMsg("press space to pause", "Trebuchet MS", 4, 50, 35, colors.WHITE, "center");
-          dispMsg("(press space to start)", "Trebuchet MS", 3, 50, 45, colors.WHITE, "center");
-        }
-      }
-
-      // *********************
-      // Scale screen elements
-      // *********************
-
-      if (!system.scaled && system.shake === 1) {
-        ctx.save();
-        ctx.scale(1.02, 1.02);
-        ctx.translate(0 - ((canvas.width / 100) * 1), 0 - ((canvas.width / 100) * 1));
-        system.scaled = true;
-      }
-
-      if (system.shake === 3) {
-        ctx.scale(1.02, 1.02);
-        ctx.translate(0 - ((canvas.width / 100) * 1), 0 - ((canvas.width / 100) * 1));
-      }
-
-      if (system.shake === 5) {
-        ctx.scale(0.98, 0.98);
-        ctx.translate(((canvas.width / 100) * 1), ((canvas.width / 100) * 1));
-      }
-
-      if (system.scaled && system.shake === 0) {
-        ctx.restore();
-        system.scaled = false;
-      }
-
-      // *****************
-      // Display game info
-      // *****************
-
-      if (system.stage === 3) {
-        drawScore();
-        drawItemDisplay();
-        if (system.itemDisplay.frame > 0 && (system.itemDisplay.current === 2 || system.itemDisplay.current === 4)) {
-          drawTimer();
-        }
-        drawTarget();
-        drawItemBox();
-        drawPaddle();
-        drawChar();
-        drawBalls();
-        drawParticles();
-        drawHSMsg();
-        if (paused) {
-          drawPauseOverlay();
-        }
-      }
-
-      // *********************
-      // Displaying debug info
-      // *********************
-
-      if (debug) {
-        drawDebugInfo();
-        // drawDebugPoints();
       }
 
     }
