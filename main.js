@@ -579,6 +579,10 @@ function Game() {
         if (system.score.HSframe > 0) {
           system.score.HSframe -= 1;
         }
+        
+        if (isNaN(system.score.high)) {
+          system.score.high = 10;
+        }
 
         var updateHighScore = function () {
           system.score.high = system.score.current;
@@ -821,7 +825,7 @@ function Game() {
 				*/
           if (system.score.current > system.score.high) {
             updateHighScore();
-            cookies.createCookie();
+            cookies.createCookie(system.score.current);
           }
           system.score.current = 0;
         }
