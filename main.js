@@ -23,9 +23,7 @@ ctx.shadowOffsetX = 4;
 ctx.shadowOffsetY = 6;
 */
 
-function game() {
-
-  var debug = true; // Debug mode (sometimes used?)
+function Game() {
 
   // ******************
   // GETTING THE CANVAS
@@ -335,7 +333,7 @@ function game() {
     var pauseFrames = 0;
     var paused = false;
     var pauseReleased = false;
-    
+
     var drawer = new Draw(canvas, system);
 
     function gameLoop() {
@@ -393,53 +391,17 @@ function game() {
       system.paused = paused;
 
     }
-
-    // *******
-    // Cookies
-    // *******
-
-    /*
-	To keep the scores between sessions, I use javascript cookies that are
-	stored in the browser. They can be easily retrieved and updated. For my
-	purposes, I have a createCookie() function which creates a cookie for the
-	current high score that expires in one year, and a getCookie() function
-	that retrives the high score from the user's browser.
-	
-	getCookie() is just used once at the beginning of the game, and
-	createCookie() is used whenever a new highscore is made.
-	
-	Resource: http://www.elated.com/articles/javascript-and-cookies/
-	*/
-
-    var createCookie = function () {
-
-      var currentHigh = getCookie();
-      if (currentHigh) {
-        document.cookie = "score=" + escape(currentHigh) + "; expires = Thu, 01 Jan 1970 00:00:01 GMT; path=/";
-      }
-      var date = new Date();
-      date.setDate(date.getDate() + 365); // Adds one year
-      document.cookie = "score=" + escape(system.score.high) + "; expires = " + date.toGMTString() + "; path=/";
-
-    };
-
-    var getCookie = function () {
-
-      var cookie = document.cookie.match('(^|;) ?score=([^;]*)(;|$)');
-      if (cookie) {
-        return unescape(cookie[2]);
-      } else {
-        return false;
-      }
-
-    };
-
-    if (getCookie()) {
-      system.score.high = getCookie();
+    
+    // Includes cookie functions
+    var cookies = new Cookies();
+    
+    if (cookies.getCookie()) {
+      system.score.high = cookies.getCookie();
     }
 
+    // Includes math functions
     var mathx = new Math2();
-
+    
     function update() {
 
       // ****************
@@ -491,7 +453,7 @@ function game() {
           }
         }
       }
-      
+
       system.intro = intro;
 
       // ***************
@@ -511,14 +473,6 @@ function game() {
       if (system.stage === 1) {
         title.frame++;
         if (title.frame < 30) {
-          /*
-				Code used for playing music - commented out since it isn't used
-				right now.
-				
-				if (title.frame === 1 && !debug) {
-					play("The Cannery");
-				}
-				*/
           title.titleOpacity = (title.frame / 30) * 100;
           title.buttonOpacity = 0;
         } else if (title.frame >= 30 && title.frame < 60) {
@@ -536,7 +490,7 @@ function game() {
           }
         }
       }
-      
+
       system.title = title;
 
       // ****************
@@ -580,7 +534,7 @@ function game() {
           }
         }
       }
-      
+
       system.instructions = instructions;
 
       // *************
@@ -867,7 +821,7 @@ function game() {
 				*/
           if (system.score.current > system.score.high) {
             updateHighScore();
-            createCookie();
+            cookies.createCookie();
           }
           system.score.current = 0;
         }
@@ -1464,4 +1418,4 @@ function game() {
 
 }
 
-window.onload = game;
+window.onload = new Game();
