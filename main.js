@@ -262,15 +262,21 @@ function Game() {
     system.paused = paused;
 
   }
+  
+  // *******
+  // COOKIES
+  // *******
+  
+  this.cookies = new Cookies();
 
-  // Includes cookie functions
-  var cookies = new Cookies();
-
-  if (cookies.getCookie()) {
-    system.score.high = cookies.getCookie();
+  if (this.cookies.getCookie()) {
+    system.score.high = this.cookies.getCookie();
   }
+  
+  // ****
+  // MATH
+  // ****
 
-  // Includes math functions
   var mathx = new Math2();
 
   function update() {
@@ -690,7 +696,7 @@ function Game() {
 				*/
         if (system.score.current > system.score.high) {
           updateHighScore();
-          cookies.createCookie(system.score.current);
+          this.cookies.createCookie(system.score.current);
         }
         system.score.current = 0;
       }

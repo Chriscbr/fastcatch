@@ -22,9 +22,9 @@ function Input() {
 
   this.listen();
 
-  this.isiOS = navigator.userAgent.match(/(iPad|iPhone|iPod)/i) !== null;
+  this.isMobile = navigator.userAgent.match(/(iPad|iPhone|iPod|android)/i) !== null;
 
-  this.ioscontrols = {
+  this.mcontrols = {
     xaccel: 0, // x acceleration (in the plane of the screen, positive towards the right side of the screen)
     yaccel: 0, // y acceleration (in the plane of the screen, positive towards the top of the screen)
     zaccel: 0, // z accelaration (perpendicular to the screen, positive out of the screen)
@@ -35,8 +35,8 @@ function Input() {
     tapping: false
   };
 
-  if (this.isiOS) {
-    this.iOSlisten();
+  if (this.isMobile) {
+    this.mlisten();
   }
 
 }
@@ -103,7 +103,7 @@ Input.prototype.listen = function () {
 };
 
 // Adds event listeners for iOS controls
-Input.prototype.iOSlisten = function () {
+Input.prototype.mlisten = function () {
   
   var self = this;
 

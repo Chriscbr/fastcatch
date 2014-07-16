@@ -1,7 +1,7 @@
 function Draw(canvas, data) {
   this.data = data;
   
-  this.font = "Ubuntu";
+  this.font = "Verdana";
 
   this.colors = {
     BLACK: "rgba(0, 0, 0, 1)",
