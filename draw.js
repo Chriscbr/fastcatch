@@ -1,5 +1,7 @@
 function Draw(canvas, data) {
   this.data = data;
+  
+  this.font = "Ubuntu";
 
   this.colors = {
     BLACK: "rgba(0, 0, 0, 1)",
@@ -173,7 +175,7 @@ Draw.prototype.drawItemBox = function () {
 
     this.ctx.fill();
 
-    this.dispMsg("?", "Verdana", (size * 0.75), centerx, centery, "#FFF", "center");
+    this.dispMsg("?", this.font, (size * 0.75), centerx, centery, "#FFF", "center");
   }
 };
 
@@ -228,13 +230,13 @@ Draw.prototype.drawItemDisplay = function () {
 
 // Draws "no item" text
 Draw.prototype.drawNoItem = function () {
-  this.dispMsg("no", "Trebuchet MS", 3, 90, 7.5, this.colors.DARKGRAY, "center");
-  this.dispMsg("item", "Trebuchet MS", 3, 90, 12.5, this.colors.DARKGRAY, "center");
+  this.dispMsg("no", this.font, 3, 90, 7.5, this.colors.DARKGRAY, "center");
+  this.dispMsg("item", this.font, 3, 90, 12.5, this.colors.DARKGRAY, "center");
 };
 
 // Draws "3x" text
 Draw.prototype.drawTripleMultiplier = function () {
-  this.dispMsg("3x", "Trebuchet MS", 8, 90, 10, this.colors.DARKGRAY, "center");
+  this.dispMsg("3x", this.font, 8, 90, 10, this.colors.DARKGRAY, "center");
 };
 
 // Draws 3 white balls in a triangular formation
@@ -290,7 +292,7 @@ Draw.prototype.drawMagnet = function () {
 Draw.prototype.drawTimer = function () {
   var itemDisplay = this.data.itemDisplay;
   if (itemDisplay.frame > 0 && (itemDisplay.current === 2 || itemDisplay.current === 4)) {
-    this.dispMsg(Math.ceil(itemDisplay.frame / 60), "Trebuchet MS", 4, 76, 10, "#FFF", "center");
+    this.dispMsg(Math.ceil(itemDisplay.frame / 60), this.font, 4, 76, 10, "#FFF", "center");
     this.ctx.fillStyle = this.colors.WHITE;
     this.ctx.beginPath();
     this.ctx.arc(((68 / 100) * this.canvas.width), ((10 / 75) * this.canvas.height), ((this.canvas.width / 100) * 4), 0, (Math.PI * 2));
@@ -323,9 +325,9 @@ Draw.prototype.drawParticles = function () {
 // Draws the scores
 Draw.prototype.drawScore = function () {
   var score = this.data.score;
-  this.dispMsg(score.current, "Trebuchet MS", 45, 100, 25, "rgba(255, 255, 255, " + (0.2 + ((score.frame / 60) * 0.8)) + ")", "right");
-  this.dispMsg("high score:", "Trebuchet MS", 3, 1, 4, this.colors.WHITE, "left");
-  this.dispMsg(score.high, "Trebuchet MS", 6, 23, 1, this.colors.WHITE, "left");
+  this.dispMsg(score.current, this.font, 40, 100, 30, "rgba(255, 255, 255, " + (0.2 + ((score.frame / 60) * 0.8)) + ")", "right");
+  this.dispMsg("high score:", this.font, 3, 1, 4, this.colors.WHITE, "left");
+  this.dispMsg(score.high, this.font, 6, 23, 1, this.colors.WHITE, "left");
 };
 
 // Draws the high score
@@ -334,7 +336,7 @@ Draw.prototype.drawHSMsg = function () {
   var progress;
   if (score.HSframe > 0) {
     progress = (score.HSlength - score.HSframe) / score.HSlength;
-    this.dispMsg("new high score!", "Trebuchet MS", 8, 50, 33.5 - (progress * 10), "rgba(255, 255, 255, " + (1 - progress) + ")", "center");
+    this.dispMsg("new high score!", this.font, 8, 50, 33.5 - (progress * 10), "rgba(255, 255, 255, " + (1 - progress) + ")", "center");
   }
 };
 
@@ -342,17 +344,17 @@ Draw.prototype.drawHSMsg = function () {
 Draw.prototype.drawPauseOverlay = function () {
   this.ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
   this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-  this.dispMsg("paused", "Trebuchet MS", 8, 50, 30, this.colors.WHITE, "center");
+  this.dispMsg("paused", this.font, 8, 50, 30, this.colors.WHITE, "center");
   if (this.isiOS) {
-    this.dispMsg("(double tap to continue)", "Trebuchet MS", 3, 50, 40, this.colors.WHITE, "center");
+    this.dispMsg("(double tap to continue)", this.font, 3, 50, 40, this.colors.WHITE, "center");
   } else {
-    this.dispMsg("(press space to continue)", "Trebuchet MS", 3, 50, 40, this.colors.WHITE, "center");
+    this.dispMsg("(press space to continue)", this.font, 3, 50, 40, this.colors.WHITE, "center");
   }
 };
 
 // Draws debug info
 Draw.prototype.drawDebugInfo = function () {
-  this.dispMsg("fps: " + ((Math.round(this.data.currentfps * 10)) / 10), "Trebuchet MS", 2, 0, 72.5, this.colors.WHITE, "left");
+  this.dispMsg("fps: " + ((Math.round(this.data.currentfps * 10)) / 10), this.font, 2, 0, 72.5, this.colors.WHITE, "left");
 };
 
 // Draws debug grid
@@ -374,12 +376,12 @@ Draw.prototype.drawDebugGrid = function () {
 // Draws intro messages
 Draw.prototype.drawIntro = function () {
   var intro = this.data.intro;
-  this.dispMsg(intro.messages[intro.currentMsg], "Trebuchet MS", 4, intro.msgPos, 37.5, "rgba(255, 255, 255, " + (intro.msgOpacity / 100) + ")", "center");
+  this.dispMsg(intro.messages[intro.currentMsg], this.font, 4, intro.msgPos, 37.5, "rgba(255, 255, 255, " + (intro.msgOpacity / 100) + ")", "center");
   if (this.data.score.high > 10) { // if the user has played before...
     if (this.isiOS) {
-      this.dispMsg("(tap to skip)", "Trebuchet MS", 3, 98, 70, this.colors.WHITE, "right");
+      this.dispMsg("(tap to skip)", this.font, 3, 98, 70, this.colors.WHITE, "right");
     } else {
-      this.dispMsg("(press space to skip)", "Trebuchet MS", 3, 98, 70, this.colors.WHITE, "right");
+      this.dispMsg("(press space to skip)", this.font, 3, 98, 70, this.colors.WHITE, "right");
     }
   }
 };
@@ -387,26 +389,26 @@ Draw.prototype.drawIntro = function () {
 // Displays menu text
 Draw.prototype.drawMenu = function () {
   var title = this.data.title;
-  this.dispMsg("fast catch", "Trebuchet MS", 10, 50, 28, "rgba(255, 255, 255, " + (title.titleOpacity / 100) + ")", "center");
-  this.dispMsg("start", "Trebuchet MS", 6, 50, 45, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
+  this.dispMsg("fast catch", this.font, 10, 50, 28, "rgba(255, 255, 255, " + (title.titleOpacity / 100) + ")", "center");
+  this.dispMsg("start", this.font, 6, 50, 45, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
   if (this.isiOS) {
-    this.dispMsg("(tap the screen)", "Trebuchet MS", 3, 50, 52, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
+    this.dispMsg("(tap the screen)", this.font, 3, 50, 52, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
   } else {
-    this.dispMsg("(press space)", "Trebuchet MS", 3, 50, 52, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
+    this.dispMsg("(press space)", this.font, 3, 50, 52, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
   }
 };
 
 // Displays instructions
 Draw.prototype.drawInstructions = function () {
   if (this.isiOS) {
-    this.dispMsg("hold your iPad sideways", "Trebuchet MS", 4, 50, 20, this.colors.WHITE, "center");
-    this.dispMsg("tilt your iPad to move the paddle", "Trebuchet MS", 4, 50, 30, this.colors.WHITE, "center");
-    this.dispMsg("double tap to pause", "Trebuchet MS", 4, 50, 40, this.colors.WHITE, "center");
-    this.dispMsg("(tap the screen to start)", "Trebuchet MS", 3, 50, 50, this.colors.WHITE, "center");
+    this.dispMsg("hold your iPad sideways", this.font, 4, 50, 20, this.colors.WHITE, "center");
+    this.dispMsg("tilt your iPad to move the paddle", this.font, 4, 50, 30, this.colors.WHITE, "center");
+    this.dispMsg("double tap to pause", this.font, 4, 50, 40, this.colors.WHITE, "center");
+    this.dispMsg("(tap the screen to start)", this.font, 3, 50, 50, this.colors.WHITE, "center");
   } else {
-    this.dispMsg("use ← and → to move", "Trebuchet MS", 4, 50, 25, this.colors.WHITE, "center");
-    this.dispMsg("press space to pause", "Trebuchet MS", 4, 50, 35, this.colors.WHITE, "center");
-    this.dispMsg("(press space to start)", "Trebuchet MS", 3, 50, 45, this.colors.WHITE, "center");
+    this.dispMsg("use ← and → to move", this.font, 4, 50, 25, this.colors.WHITE, "center");
+    this.dispMsg("press space to pause", this.font, 4, 50, 35, this.colors.WHITE, "center");
+    this.dispMsg("(press space to start)", this.font, 3, 50, 45, this.colors.WHITE, "center");
   }
 };
 
