@@ -352,11 +352,6 @@ Draw.prototype.drawPauseOverlay = function () {
   }
 };
 
-// Draws debug info
-Draw.prototype.drawDebugInfo = function () {
-  this.dispMsg("fps: " + ((Math.round(this.data.currentfps * 10)) / 10), this.font, 2, 0, 72.5, this.colors.WHITE, "left");
-};
-
 // Draws debug grid
 Draw.prototype.drawDebugGrid = function () {
   this.ctx.strokeStyle = this.colors.WHITE;

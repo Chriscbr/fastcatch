@@ -6,20 +6,23 @@ Function hierarchy:
   - controls
   - mcontrols
 */
-function Game2 () {
-  
+function Game2() {
+
   // Sets up the canvas
   this.canvas = document.getElementById("myCanvas");
+  
+  // Sets up the FPS counter
+  this.setupStats();
 
   if (this.canvas.getContext) {
     this.setupCanvas(this.canvas);
   }
-  
+
   // Instantiating core classes
   this.input = new Input();
   this.cookies = new Cookies();
   this.mathx = new Math2();
-  
+
   // Setting up the system
   this.system = {
     isMobile: navigator.userAgent.match(/(iPad|iPhone|iPod|android)/i) !== null, // constant
@@ -28,10 +31,9 @@ function Game2 () {
     stage: 0, // variable - determines the overall state of the game
     gameSpeed: 1, // variable - increases by gameAccel every frame
     gameAccel: 0.001, // constant - speed at which gameSpeed increases
-    firstFrame: false, // reports true during the frame a point is scored
+    // firstFrame: false, // reports true during the frame a point is scored
     shake: 0, // used for making the screen scale up during hits (0-3)
     scaled: false, // used to tell if the canvas is already scaled
-    currentfps: 0, // variable - the current FPS
     score: {
       current: 0, // variable - score of current round
       high: 10, // variable - high score
@@ -99,12 +101,12 @@ function Game2 () {
       reunpressed: false
     },
     paused: false // variable - if the game is paused
-  }
-  
+  };
+
   this.drawer = new Draw(this.canvas, this.system);
-  
+
   this.gameLoop();
-  
+
 }
 
 // Resets the canvas's size
@@ -133,6 +135,43 @@ Game2.prototype.setupCanvas = function (canvas) {
   window.onresize();
 };
 
+// Sets up the FPS counter
+Game2.prototype.setupStats = function () {
+  this.stats = new Stats();
+  this.stats.setMode(0); // 0: fps, 1: ms
+
+  // Align top-left
+  this.stats.domElement.style.position = 'absolute';
+  this.stats.domElement.style.left = '0px';
+  this.stats.domElement.style.top = '0px';
+
+  document.body.appendChild(this.stats.domElement);
+};
+
+// Runs the main game loop
+Game2.prototype.gameLoop = function () {
+  var self = this;
+  setInterval(function () {
+    self.stats.begin();
+    
+    self.checkPause();
+    if (!self.system.paused) {
+      self.update();
+    }
+    self.drawer.render();
+    
+    self.stats.end();
+    
+  }, 1000 / 60);
+};
+
+// Updates the game's paused state
+Game2.prototype.checkPause = function () {
+  // code
+};
+
+/*
+// Runs the main game loop - calculations and rendering
 Game2.prototype.gameLoop = function () {
   var self = this;
   var setfps = 60; // this is the intended fps that the game is set to
@@ -160,8 +199,6 @@ Game2.prototype.gameLoop = function () {
     }
     self.currentfps += (thisFrameFPS - self.currentfps) / fpsFilter;
     lastLoop = thisLoop;
-
-    pauseFrames++;
     if (!self.system.controls.space && !self.system.mcontrols.tapping) {
       pauseReleased = true;
     }
@@ -180,6 +217,7 @@ Game2.prototype.gameLoop = function () {
         pauseReleased = false;
       }
     } else {
+      pauseFrames++;
       if (self.system.isMobile && self.system.ioscontrols.tapping && self.system.stage === 3 && pauseReleased) {
         if (pauseFrames > 30) {
           pauseFrames = 1;
@@ -197,6 +235,7 @@ Game2.prototype.gameLoop = function () {
     
   }, 1000 / setfps);
 };
+*/
 
 Game2.prototype.update = function () {
   

@@ -33,6 +33,16 @@ function Game() {
 
   }
 
+  var stats = new Stats();
+  stats.setMode(0); // 0: fps, 1: ms
+
+  // Align top-left
+  stats.domElement.style.position = 'absolute';
+  stats.domElement.style.left = '0px';
+  stats.domElement.style.top = '0px';
+
+  document.body.appendChild(stats.domElement);
+
   // ********
   // CONTROLS
   // ********
@@ -196,7 +206,11 @@ function Game() {
   var setfps = 60; // this is the intended fps that the game is set to
   var currentfps = 0; // this displays the FPS the game is being rendered at
   var fpsFilter = 50; // this determines how many frames to average
-  var clock = setInterval(gameLoop, 1000 / setfps);
+  var clock = setInterval(function() {
+    stats.begin();
+    gameLoop();
+    stats.end();
+  }, 1000 / setfps);
   var thisLoop;
   var lastLoop = new Date();
   var thisFrameFPS;
@@ -262,17 +276,17 @@ function Game() {
     system.paused = paused;
 
   }
-  
+
   // *******
   // COOKIES
   // *******
-  
+
   this.cookies = new Cookies();
 
   if (this.cookies.getCookie()) {
     system.score.high = this.cookies.getCookie();
   }
-  
+
   // ****
   // MATH
   // ****
