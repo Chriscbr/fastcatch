@@ -438,19 +438,19 @@ Draw.prototype.render = function () {
 
   this.shake();
 
-  if (this.data.stage === 0) {
+  if (this.data.stage === 1) {
     this.drawIntro();
   }
   
-  if (this.data.stage === 1) {
+  if (this.data.stage === 2) {
     this.drawMenu();
   }
 
-  if (this.data.stage === 2) {
+  if (this.data.stage === 3) {
     this.drawInstructions();
   }
 
-  if (this.data.stage === 3) {
+  if (this.data.stage === 0) {
     this.drawScore();
     this.drawItemDisplay();
     this.drawTimer();
@@ -465,7 +465,4 @@ Draw.prototype.render = function () {
       this.drawPauseOverlay();
     }
   }
-
-  this.drawDebugInfo();
-  // this.drawDebugGrid();
 };

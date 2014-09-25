@@ -10,7 +10,7 @@ function Game2() {
 
   // Sets up the canvas
   this.canvas = document.getElementById("myCanvas");
-  
+
   // Sets up the FPS counter
   this.setupStats();
 
@@ -45,7 +45,8 @@ function Game2() {
       x: 50, // variable - x position (0 to 100)
       dx: 0, // variable - horizontal speed (approx. -1 to 1)
       speed: 0.15, // constant - dx increment
-      friction: 0.91 // constant - dx friction
+      friction: 0.91, // constant - dx friction
+      movementAssist: 0.003 // constant - greater the value, easier game is
     },
     paddle: {
       tilt: 90, // variable - paddle direction (0 to 180)
@@ -53,8 +54,8 @@ function Game2() {
     },
     balls: {
       data: [new Ball()], // list of balls
-      avgBallX: 0, // variable - average ball x position
-      avgBallY: 0 // variable - average ball y position
+      avgBallX: 50, // variable - average ball x position
+      avgBallY: 50 // variable - average ball y position
     },
     target: {
       x: 20, // variable - x position (0 to 100)
@@ -153,15 +154,15 @@ Game2.prototype.gameLoop = function () {
   var self = this;
   setInterval(function () {
     self.stats.begin();
-    
+
     self.checkPause();
     if (!self.system.paused) {
       self.update();
     }
     self.drawer.render();
-    
+
     self.stats.end();
-    
+
   }, 1000 / 60);
 };
 
@@ -237,8 +238,51 @@ Game2.prototype.gameLoop = function () {
 };
 */
 
+// Updates all game data, including menus, animations, etc.
 Game2.prototype.update = function () {
-  
+
+  // Main game
+  if (this.system.stage === 0) {
+
+    this.updateGame();
+
+  }
+
+};
+
+// Updates the data of the core game
+Game2.prototype.updateGame = function () {
+
+  this.updateGameCharacter();
+
+};
+
+Game2.prototype.updateGameCharacter = function () {
+
+  if (this.system.isMobile) {
+
+  } else {
+
+    if (this.system.controls.right === true) {
+      this.system.character.dx += this.system.character.speed +
+                                  ((this.system.balls.avgBallX - this.system.character.x) * this.system.character.movementAssist);
+    }
+    if (this.system.controls.left === true) {
+      this.system.character.dx -= this.system.character.speed +
+                                  ((this.system.character.x - this.system.balls.avgBallX) * this.system.character.movementAssist);
+    }
+    this.system.character.dx *= this.system.character.friction;
+    this.system.character.x += this.system.character.dx;
+
+  }
+
+  if (this.system.character.x > 100) {
+    this.system.character.x = 100;
+  }
+  if (this.system.character.x < 0) {
+    this.system.character.x = 0;
+  }
+
 };
 
 window.onload = new Game2();
