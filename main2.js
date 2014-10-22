@@ -17,7 +17,7 @@ function Game2() {
   if (this.canvas.getContext) {
     this.setupCanvas(this.canvas);
   }
-  
+
   // Instantiating core classes
   this.input = new Input();
   this.cookies = new Cookies();
@@ -256,6 +256,7 @@ Game2.prototype.updateGame = function () {
   this.updateGameCharacter();
   this.updateGameBalls();
   this.updateGamePaddle();
+  this.updateGameCollisions();
 
 };
 
@@ -386,25 +387,25 @@ Game2.prototype.updateGamePaddle = function () {
   var paddleX = this.system.character.x;
   var paddleY = 58;
   var toTarget = this.mathx.toDegrees(Math.atan((targetY - paddleY) / (targetX - paddleX)));
-  
+
   // Prevents negative paddle tilt
   if (toTarget < 0) {
     toTarget += 180;
   }
-  
+
   // Second determines angle to point at ball
   var ballX = this.system.balls.avgBallX;
   var ballY = this.system.balls.avgBallY;
   var toBall = this.mathx.toDegrees(Math.atan((ballY - paddleY) / (ballX - paddleX)));
-  
+
   if (toBall < 0) {
     toBall += 180;
   }
-  
+
   // Third averages the two angles
   var toFinal = (toTarget + toBall) / 2;
   toFinal = ((toFinal - 90) * 0.5) + 90;
-  
+
   this.system.paddle.tilt = toFinal;
 };
 
@@ -429,6 +430,91 @@ Game2.prototype.updateGameOver = function () {
   }
   this.system.score.current = 0;
   */
+};
+
+// Handles the general collisions in the game
+Game2.prototype.updateGameCollisions = function () {
+
+  for (i = 0; i < this.system.balls.data.length; i++) {
+    this.updateGameCollisionsHelper(i);
+  }
+
+  // Calculates the direction of each ball, used for bouncing
+  for (i = 0; i < this.system.balls.data.length; i++) {
+    this.system.balls.data[i].direction = this.mathx.toDegrees(Math.atan2(this.system.balls.data[i].dy, this.system.balls.data[i].dx)) - 90;
+  }
+
+  var self = this;
+  var bounce = function (ballNum, direction) {
+    self.system.balls.data[ballNum].direction = direction;
+    self.system.balls.data[ballNum].dx = self.system.balls.data[ballNum].bounciness * (Math.sin(self.mathx.toRadians(self.system.balls.data[ballNum].direction)));
+    self.system.balls.data[ballNum].dy = self.system.balls.data[ballNum].bounciness * (Math.cos(self.mathx.toRadians(self.system.balls.data[ballNum].direction)));
+  };
+
+  for (i = 0; i < this.system.balls.data.length; i++) {
+    if (this.system.balls.data[i].colliding) {
+      bounce(i, this.system.paddle.tilt - 90);
+    }
+  }
+
+};
+
+// Used by updateGameCollisions to handle individual ball-paddle collision
+Game2.prototype.updateGameCollisionsHelper = function (ballNum) {
+  this.system.balls.data[ballNum].colliding = false;
+  
+  if (this.system.balls.data[ballNum].cooldown > 0) {
+    
+    this.system.balls.data[ballNum].cooldown--;
+    
+  } else {
+
+    // Coordinates of paddle's collision in neutral position
+    var collpoints = [8, 56,
+                    -4, 56,
+                    0, 56,
+                    4, 56,
+                    8, 56];
+    // Center of paddle rotation
+    var centerx = this.system.character.x;
+    var centery = 62;
+
+    var ballx = this.system.balls.data[ballNum].x;
+    var bally = this.system.balls.data[ballNum].y;
+    var ballsize = this.system.balls.data[ballNum].size;
+
+    var temp;
+
+    temp = this.mathx.rotatePoint(centerx, centery, this.mathx.toRadians(this.system.paddle.tilt - 90), this.system.character.x + collpoints[0], collpoints[1]);
+    if (this.mathx.distance(temp.x, temp.y, ballx, bally) < ballsize + 1) {
+      this.system.balls.data[ballNum].colliding = true;
+      this.system.balls.data[ballNum].cooldown = 5;
+    }
+
+    temp = this.mathx.rotatePoint(centerx, centery, this.mathx.toRadians(this.system.paddle.tilt - 90), this.system.character.x + collpoints[2], collpoints[3]);
+    if (this.mathx.distance(temp.x, temp.y, ballx, bally) < ballsize + 1) {
+      this.system.balls.data[ballNum].colliding = true;
+      this.system.balls.data[ballNum].cooldown = 5;
+    }
+
+    temp = this.mathx.rotatePoint(centerx, centery, this.mathx.toRadians(this.system.paddle.tilt - 90), this.system.character.x + collpoints[4], collpoints[5]);
+    if (this.mathx.distance(temp.x, temp.y, ballx, bally) < ballsize + 1) {
+      this.system.balls.data[ballNum].colliding = true;
+      this.system.balls.data[ballNum].cooldown = 5;
+    }
+
+    temp = this.mathx.rotatePoint(centerx, centery, this.mathx.toRadians(this.system.paddle.tilt - 90), this.system.character.x + collpoints[6], collpoints[7]);
+    if (this.mathx.distance(temp.x, temp.y, ballx, bally) < ballsize + 1) {
+      this.system.balls.data[ballNum].colliding = true;
+      this.system.balls.data[ballNum].cooldown = 5;
+    }
+
+    temp = this.mathx.rotatePoint(centerx, centery, this.mathx.toRadians(this.system.paddle.tilt - 90), this.system.character.x + collpoints[8], collpoints[9]);
+    if (this.mathx.distance(temp.x, temp.y, ballx, bally) < ballsize + 1) {
+      this.system.balls.data[ballNum].colliding = true;
+      this.system.balls.data[ballNum].cooldown = 5;
+    }
+  }
 };
 
 Game2.prototype.newHighScore = function () {
