@@ -1,4 +1,4 @@
-function Ball(x, y, dx, dy, frames) {
+function Ball(x, y, dx, dy) {
   this.x = x; // x position
   this.y = y; // y position
   this.dx = dx; // x velocity
@@ -10,6 +10,6 @@ function Ball(x, y, dx, dy, frames) {
   this.size = 3.5; // size
   this.bounciness = 2.2; // determines velocity after collision
   this.fadeIn = true; // ball is respawning?
-  this.fadeFrame = frames; // used if ball is respawning
-  this.fadeFrameTotal = frames; // used if ball is respawning
+  this.fadeFrame = 30; // used if ball is respawning
+  this.fadeFrameTotal = 30; // used if ball is respawning
 }

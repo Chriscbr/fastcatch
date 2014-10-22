@@ -49,7 +49,7 @@ function Game() {
 
   var input = new Input();
   var controls = input.controls;
-  var ioscontrols = input.ioscontrols;
+  var ioscontrols = input.mcontrols;
 
   // **********
   // GAME LOGIC

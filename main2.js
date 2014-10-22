@@ -17,7 +17,7 @@ function Game2() {
   if (this.canvas.getContext) {
     this.setupCanvas(this.canvas);
   }
-
+  
   // Instantiating core classes
   this.input = new Input();
   this.cookies = new Cookies();
@@ -53,7 +53,7 @@ function Game2() {
       speed: 3 // constant - tilt speed
     },
     balls: {
-      data: [new Ball()], // list of balls
+      data: [new Ball(50, 5, 0, 0)], // list of balls
       avgBallX: 50, // variable - average ball x position
       avgBallY: 50 // variable - average ball y position
     },
@@ -254,22 +254,39 @@ Game2.prototype.update = function () {
 Game2.prototype.updateGame = function () {
 
   this.updateGameCharacter();
+  this.updateGameBalls();
+  this.updateGamePaddle();
 
 };
 
+// Updates the character's position
 Game2.prototype.updateGameCharacter = function () {
 
   if (this.system.isMobile) {
+
+    var charx = this.system.character.x;
+    var ballx = this.system.balls.avgBallX;
+    var tiltx;
+    if (this.system.ioscontrols.orientation === 0) {
+      tiltx = (this.system.ioscontrols.xaccel + 3) * 15;
+    } else if (this.system.ioscontrols.orientation === 90) {
+      tiltx = ((0 - this.system.ioscontrols.yaccel) + 3) * 15;
+    } else if (this.system.ioscontrols.orientation === -90) {
+      tiltx = (this.system.ioscontrols.yaccel + 3) * 15;
+    } else if (this.system.ioscontrols.orientation === 180) {
+      tiltx = ((0 - this.system.ioscontrols.xaccel) + 3) * 15;
+    }
+    this.system.character.x = ((charx * 13) + ballx + tiltx) / 15;
 
   } else {
 
     if (this.system.controls.right === true) {
       this.system.character.dx += this.system.character.speed +
-                                  ((this.system.balls.avgBallX - this.system.character.x) * this.system.character.movementAssist);
+        ((this.system.balls.avgBallX - this.system.character.x) * this.system.character.movementAssist);
     }
     if (this.system.controls.left === true) {
       this.system.character.dx -= this.system.character.speed +
-                                  ((this.system.character.x - this.system.balls.avgBallX) * this.system.character.movementAssist);
+        ((this.system.character.x - this.system.balls.avgBallX) * this.system.character.movementAssist);
     }
     this.system.character.dx *= this.system.character.friction;
     this.system.character.x += this.system.character.dx;
@@ -283,6 +300,140 @@ Game2.prototype.updateGameCharacter = function () {
     this.system.character.x = 0;
   }
 
+};
+
+// Update's the balls
+Game2.prototype.updateGameBalls = function () {
+
+  // Update avgBallX and avgBallY
+  var i;
+  if (this.system.balls.data.length > 0) {
+    var totalX = 0;
+    var totalY = 0;
+    var totalBalls = this.system.balls.data.length;
+    for (i = 0; i < totalBalls; i++) {
+      totalX += this.system.balls.data[i].x;
+      totalY += this.system.balls.data[i].y;
+    }
+    this.system.balls.avgBallX = totalX / totalBalls;
+    this.system.balls.avgBallY = totalY / totalBalls;
+  } else {
+    this.updateGameOver();
+  }
+
+  // Update individual balls
+  for (i = 0; i < this.system.balls.data.length; i++) {
+
+    // Prevents updates while ball is respawning
+    if (this.system.balls.data[i].fadeIn) {
+
+      this.system.balls.data[i].fadeFrame--;
+
+      if (this.system.balls.data[i].fadeFrame === 0) {
+        this.system.balls.data[i].fadeIn = false;
+      }
+
+    } else {
+
+      // Updates x and y velocities
+      this.system.balls.data[i].dy += this.system.balls.data[i].gravity;
+
+      this.system.balls.data[i].x += this.system.balls.data[i].dx * this.system.gameSpeed;
+      this.system.balls.data[i].y -= this.system.balls.data[i].dy * this.system.gameSpeed;
+
+      // Wall detection
+      if (this.system.balls.data[i].x > (100 - (this.system.balls.data[i].size * 0.8))) {
+        this.system.balls.data[i].x = (100 - (this.system.balls.data[i].size * 0.8));
+        this.system.balls.data[i].dx *= -1;
+      }
+
+      if (this.system.balls.data[i].x < (this.system.balls.data[i].size * 0.8)) {
+        this.system.balls.data[i].x = (this.system.balls.data[i].size * 0.8);
+        this.system.balls.data[i].dx *= -1;
+      }
+
+      // Magnet item
+      if (this.system.itemDisplay.current === 4) {
+
+        this.system.balls.data[i].x = this.system.character.x;
+
+        // Prevents ball from moving unpredictably after item ends
+        if (this.system.itemDisplay.frame === 1) {
+          this.system.balls.data[i].dx = this.system.character.dx;
+        } else {
+          this.system.balls.data[i].dx = 0;
+        }
+
+      }
+
+      // Remove ball if fallen off screen (and update counting variable to compensate)
+      if (this.system.balls.data[i].y > 75) {
+        this.system.balls.data.splice(i, 1);
+        i--;
+      }
+
+    }
+
+  }
+
+};
+
+// Updates the paddle
+Game2.prototype.updateGamePaddle = function () {
+  // First determines angle to point at target
+  var targetX = this.system.target.x;
+  var targetY = 30 - Math.abs(this.system.target.y - 30);
+  var paddleX = this.system.character.x;
+  var paddleY = 58;
+  var toTarget = this.mathx.toDegrees(Math.atan((targetY - paddleY) / (targetX - paddleX)));
+  
+  // Prevents negative paddle tilt
+  if (toTarget < 0) {
+    toTarget += 180;
+  }
+  
+  // Second determines angle to point at ball
+  var ballX = this.system.balls.avgBallX;
+  var ballY = this.system.balls.avgBallY;
+  var toBall = this.mathx.toDegrees(Math.atan((ballY - paddleY) / (ballX - paddleX)));
+  
+  if (toBall < 0) {
+    toBall += 180;
+  }
+  
+  // Third averages the two angles
+  var toFinal = (toTarget + toBall) / 2;
+  toFinal = ((toFinal - 90) * 0.5) + 90;
+  
+  this.system.paddle.tilt = toFinal;
+};
+
+// Updates the game when a game over occurs
+Game2.prototype.updateGameOver = function () {
+  this.system.gameSpeed = 1;
+  this.system.balls.data.push(new Ball());
+  this.system.paddle.tilt = 90;
+  /*
+  Reset's the character's position - not sure if necessary
+  if (!system.isiOS) {
+  system.character.x = 50;
+  system.character.dx = 0;
+  }
+  */
+
+  // Include!!!
+  /*
+  if (this.system.score.current > this.system.score.high) {
+    updateHighScore();
+    this.cookies.createCookie(this.system.score.current);
+  }
+  this.system.score.current = 0;
+  */
+};
+
+Game2.prototype.newHighScore = function () {
+  this.system.score.high = this.system.score.current;
+  this.system.score.HSframe = this.system.score.HSlength;
 };
 
 window.onload = new Game2();
