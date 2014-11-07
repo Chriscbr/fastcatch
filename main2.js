@@ -257,6 +257,7 @@ Game2.prototype.updateGame = function () {
   this.updateGameBalls();
   this.updateGamePaddle();
   this.updateGameCollisions();
+  this.updateGameParticles();
 
 };
 
@@ -457,16 +458,21 @@ Game2.prototype.updateGameCollisions = function () {
     }
   }
 
+  // Tests for collision with target
+  for (i = 0; i < this.system.balls.data.length; i++) {
+    this.testTargetCollision(i);
+  }
+
 };
 
 // Used by updateGameCollisions to handle individual ball-paddle collision
 Game2.prototype.updateGameCollisionsHelper = function (ballNum) {
   this.system.balls.data[ballNum].colliding = false;
-  
+
   if (this.system.balls.data[ballNum].cooldown > 0) {
-    
+
     this.system.balls.data[ballNum].cooldown--;
-    
+
   } else {
 
     // Coordinates of paddle's collision in neutral position
@@ -513,6 +519,66 @@ Game2.prototype.updateGameCollisionsHelper = function (ballNum) {
     if (this.mathx.distance(temp.x, temp.y, ballx, bally) < ballsize + 1) {
       this.system.balls.data[ballNum].colliding = true;
       this.system.balls.data[ballNum].cooldown = 5;
+    }
+  }
+};
+
+// Tests the collision between the ball and target
+Game2.prototype.testTargetCollision = function (num) {
+  var target = this.system.target;
+  var ball = this.system.balls.data[num];
+  if (this.mathx.distance(ball.x, ball.y, target.x, target.y) < (target.size + ball.size)) {
+    this.system.gameSpeed = 1 + (this.system.gameAccel * this.system.score.current);
+    this.system.balls.data[num].gravity = -0.05 - ((this.system.gameAccel * this.system.score.current) / 25);
+    if (this.system.itemDisplay.current === 2) {
+      this.system.score.current += 3;
+      this.createGameParticles(target.x, target.y);
+    } else {
+      this.system.score.current += 1;
+    }
+    this.system.score.frame = 60;
+    this.system.shake = 1;
+    this.createGameParticles(target.x, target.y);
+    var x, y, i;
+    for (i = 0; i <= 10; i++) {
+      x = 20 + Math.round(Math.random() * 60);
+      y = 10 + Math.round(Math.random() * 35);
+      if (this.mathx.distance(ball.x, ball.y, target.x, target.y) > 30) {
+        return;
+      }
+    }
+    this.system.target.x = x;
+    this.system.target.y = y;
+    this.system.firstFrame = true;
+  }
+};
+
+// Updates game particles' physics
+Game2.prototype.updateGameParticles = function () {
+  var i;
+  for (i = 0; i < this.system.particles.data.length; i++) {
+    this.system.particles.data[i].vy += this.system.particles.gravity;
+
+    this.system.particles.data[i].x += this.system.particles.data[i].vx;
+    this.system.particles.data[i].y += this.system.particles.data[i].vy;
+
+    if (this.system.particles.data[i].y > 75) {
+      this.system.particles.data.splice(i, 1);
+    }
+  }
+};
+
+// Creates new particles at intended location
+Game2.prototype.createGameParticles = function (targetx, targety) {
+  var i;
+  for (i = 1; i <= this.system.particles.perTarget; i++) {
+    if (this.system.particles.data.length < this.system.particles.max) {
+      var data = {};
+      data.x = targetx;
+      data.y = targety;
+      data.vx = (Math.random() - 0.5) * 3;
+      data.vy = Math.random() * -2;
+      this.system.particles.data.push(data);
     }
   }
 };
