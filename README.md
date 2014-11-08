@@ -12,3 +12,5 @@ ideas
 * Add sound effects
 * Add combo system for additional/faster/more-skill-based points
 * Develop more advanced algorithm for replacing target
+* Add new items (?)
+* Adjust mobile device control system (character moves when device isn't being tilted)

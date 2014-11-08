@@ -33,6 +33,7 @@ function Game2() {
     gameAccel: 0.001, // constant - speed at which gameSpeed increases
     // firstFrame: false, // reports true during the frame a point is scored
     shake: 0, // used for making the screen scale up during hits (0-3)
+    shakelength: 6, // number of frames for the screen to shake
     scaled: false, // used to tell if the canvas is already scaled
     score: {
       current: 0, // variable - score of current round
@@ -253,12 +254,47 @@ Game2.prototype.update = function () {
 // Updates the data of the core game
 Game2.prototype.updateGame = function () {
 
+  this.updateGameShake();
+  this.updateScoreDisplay();
   this.updateGameCharacter();
   this.updateGameBalls();
   this.updateGamePaddle();
   this.updateGameCollisions();
   this.updateGameParticles();
 
+};
+
+// Updates the screen shaking status/timer
+Game2.prototype.updateGameShake = function () {
+
+  if (this.system.shake > 0) {
+    this.system.shake++;
+    if (this.system.shake > this.system.shakelength) {
+      this.system.shake = 0;
+    }
+  }
+
+};
+
+// Updates score counting
+Game2.prototype.updateScoreDisplay = function () {
+  if (this.system.score.frame > 0) {
+    this.system.score.frame -= 1;
+  }
+
+  if (this.system.score.HSframe > 0) {
+    this.system.score.HSframe -= 1;
+  }
+
+  if (isNaN(this.system.score.high)) {
+    this.system.score.high = 10;
+  }
+};
+
+// Updates high score
+Game2.prototype.updateHighScore = function () {
+  this.system.score.high = this.system.score.current;
+  this.system.score.HSframe = this.system.score.HSlength;
 };
 
 // Updates the character's position
@@ -378,6 +414,10 @@ Game2.prototype.updateGameBalls = function () {
 
   }
 
+  if (this.system.balls.data.length === 0) {
+    this.updateGameOver();
+  }
+
 };
 
 // Updates the paddle
@@ -413,7 +453,7 @@ Game2.prototype.updateGamePaddle = function () {
 // Updates the game when a game over occurs
 Game2.prototype.updateGameOver = function () {
   this.system.gameSpeed = 1;
-  this.system.balls.data.push(new Ball());
+  this.system.balls.data.push(new Ball(50, 5, 0, 0));
   this.system.paddle.tilt = 90;
   /*
   Reset's the character's position - not sure if necessary
@@ -423,14 +463,11 @@ Game2.prototype.updateGameOver = function () {
   }
   */
 
-  // Include!!!
-  /*
   if (this.system.score.current > this.system.score.high) {
-    updateHighScore();
+    this.updateHighScore();
     this.cookies.createCookie(this.system.score.current);
   }
   this.system.score.current = 0;
-  */
 };
 
 // Handles the general collisions in the game
@@ -581,11 +618,6 @@ Game2.prototype.createGameParticles = function (targetx, targety) {
       this.system.particles.data.push(data);
     }
   }
-};
-
-Game2.prototype.newHighScore = function () {
-  this.system.score.high = this.system.score.current;
-  this.system.score.HSframe = this.system.score.HSlength;
 };
 
 window.onload = new Game2();
