@@ -10,7 +10,12 @@ ideas
 
 * Add upbeat music
 * Add sound effects
-* Add combo system for additional/faster/more-skill-based points
-* Develop more advanced algorithm for replacing target
-* Add new items (?)
+* Add max combo counter
+* Develop more advanced algorithm for replacing target (make comboing more consistent)
+* Improve items
+  * Fine tune triple ball
+  * Make triple score more noticeable
+  * Scrap magnet item?
 * Adjust mobile device control system (character moves when device isn't being tilted)
+* Add more visual polish somehow
+* Fix trick with holding left and right arrow keys at the same time to auto-control

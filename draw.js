@@ -325,9 +325,9 @@ Draw.prototype.drawParticles = function () {
 // Draws the scores
 Draw.prototype.drawScore = function () {
   var score = this.data.score;
-  this.dispMsg(score.current, this.font, 40, 100, 30, "rgba(255, 255, 255, " + (0.2 + ((score.frame / 60) * 0.8)) + ")", "right");
-  this.dispMsg("high score:", this.font, 3, 1, 4, this.colors.WHITE, "left");
-  this.dispMsg(score.high, this.font, 6, 23, 1, this.colors.WHITE, "left");
+  this.dispMsg(score.current, this.font, 22, 100, 49, "rgba(255, 255, 255, " + (0.2 + ((score.frame / 60) * 0.8)) + ")", "right");
+  this.dispMsg("high score:", this.font, 3, 1, 3, this.colors.WHITE, "left");
+  this.dispMsg(score.high, this.font, 6, 25, 1, this.colors.WHITE, "left");
 };
 
 // Draws the high score
@@ -337,6 +337,14 @@ Draw.prototype.drawHSMsg = function () {
   if (score.HSframe > 0) {
     progress = (score.HSlength - score.HSframe) / score.HSlength;
     this.dispMsg("new high score!", this.font, 8, 50, 33.5 - (progress * 10), "rgba(255, 255, 255, " + (1 - progress) + ")", "center");
+  }
+};
+
+Draw.prototype.drawCombos = function () {
+  var combos = this.data.combos.current;
+  var frames = this.data.combos.frames;
+  if (combos > 1) {
+  this.dispMsg("combo x" + combos, this.font, 5, 2, 32.5, "rgba(255, 255, 255, " + (frames / 60) + ")", "left");
   }
 };
 
@@ -460,6 +468,7 @@ Draw.prototype.render = function () {
     this.drawChar();
     this.drawBalls();
     this.drawParticles();
+    this.drawCombos();
     this.drawHSMsg();
     if (this.paused) {
       this.drawPauseOverlay();

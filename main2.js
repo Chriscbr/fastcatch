@@ -30,7 +30,7 @@ function Game2() {
     mcontrols: this.input.mcontrols,
     stage: 0, // variable - determines the overall state of the game
     gameSpeed: 1, // variable - increases by gameAccel every frame
-    gameAccel: 0.001, // constant - speed at which gameSpeed increases
+    gameAccel: 0.0001, // constant - speed at which gameSpeed increases
     // firstFrame: false, // reports true during the frame a point is scored
     shake: 0, // used for making the screen scale up during hits (0-3)
     shakelength: 6, // number of frames for the screen to shake
@@ -41,6 +41,11 @@ function Game2() {
       frame: 0, // frames for animation
       HSframe: 0, // current frame for high score anim.
       HSlength: 120 // constant - length (in frames) of high score anim.
+    },
+    combos: {
+      current: 0, // current combo
+      hitonbounce: false, // has a target been hit on the current bounce?
+      frames: 0 // frames for showing combo streak (out of 60)
     },
     character: {
       x: 50, // variable - x position (0 to 100)
@@ -101,6 +106,10 @@ function Game2() {
       repressed: false, // variable - if the button has been repressed
       // since being unpressed
       reunpressed: false
+    },
+    sounds: {
+      bounce: new Audio("bounce.wav"),
+      target: "target.mp3"
     },
     paused: false // variable - if the game is paused
   };
@@ -256,6 +265,7 @@ Game2.prototype.updateGame = function () {
 
   this.updateGameShake();
   this.updateScoreDisplay();
+  this.updateGameCombos();
   this.updateGameCharacter();
   this.updateGameBalls();
   this.updateGamePaddle();
@@ -287,7 +297,7 @@ Game2.prototype.updateScoreDisplay = function () {
   }
 
   if (isNaN(this.system.score.high)) {
-    this.system.score.high = 10;
+    this.system.score.high = 100;
   }
 };
 
@@ -295,6 +305,13 @@ Game2.prototype.updateScoreDisplay = function () {
 Game2.prototype.updateHighScore = function () {
   this.system.score.high = this.system.score.current;
   this.system.score.HSframe = this.system.score.HSlength;
+};
+
+// Updates game combos
+Game2.prototype.updateGameCombos = function () {
+  if (this.system.combos.frames > 0) {
+    this.system.combos.frames--;
+  }
 };
 
 // Updates the character's position
@@ -468,6 +485,8 @@ Game2.prototype.updateGameOver = function () {
     this.cookies.createCookie(this.system.score.current);
   }
   this.system.score.current = 0;
+  this.system.combos.current = 0;
+  this.system.combos.hitonbounce = false;
 };
 
 // Handles the general collisions in the game
@@ -487,11 +506,17 @@ Game2.prototype.updateGameCollisions = function () {
     self.system.balls.data[ballNum].direction = direction;
     self.system.balls.data[ballNum].dx = self.system.balls.data[ballNum].bounciness * (Math.sin(self.mathx.toRadians(self.system.balls.data[ballNum].direction)));
     self.system.balls.data[ballNum].dy = self.system.balls.data[ballNum].bounciness * (Math.cos(self.mathx.toRadians(self.system.balls.data[ballNum].direction)));
+    // self.system.sounds.bounce.play();
   };
 
   for (i = 0; i < this.system.balls.data.length; i++) {
     if (this.system.balls.data[i].colliding) {
       bounce(i, this.system.paddle.tilt - 90);
+      if (!this.system.combos.hitonbounce) {
+        this.system.combos.current = 0;
+      } else {
+        this.system.combos.hitonbounce = false;
+      }
     }
   }
 
@@ -567,19 +592,26 @@ Game2.prototype.testTargetCollision = function (num) {
   if (this.mathx.distance(ball.x, ball.y, target.x, target.y) < (target.size + ball.size)) {
     this.system.gameSpeed = 1 + (this.system.gameAccel * this.system.score.current);
     this.system.balls.data[num].gravity = -0.05 - ((this.system.gameAccel * this.system.score.current) / 25);
+    this.system.combos.current += 1;
+    this.system.combos.frames = 60;
+    var baseScore = 10;
+    if (this.system.combos.current > 1) {
+      baseScore += this.system.combos.current;
+    }
     if (this.system.itemDisplay.current === 2) {
-      this.system.score.current += 3;
+      this.system.score.current += baseScore * 3;
       this.createGameParticles(target.x, target.y);
     } else {
-      this.system.score.current += 1;
+      this.system.score.current += baseScore;
     }
+    this.system.combos.hitonbounce = true;
     this.system.score.frame = 60;
     this.system.shake = 1;
     this.createGameParticles(target.x, target.y);
     var x, y, i;
     for (i = 0; i <= 10; i++) {
       x = 20 + Math.round(Math.random() * 60);
-      y = 10 + Math.round(Math.random() * 35);
+      y = 10 + Math.round(Math.random() * 25);
       if (this.mathx.distance(ball.x, ball.y, target.x, target.y) > 30) {
         return;
       }
@@ -587,6 +619,8 @@ Game2.prototype.testTargetCollision = function (num) {
     this.system.target.x = x;
     this.system.target.y = y;
     this.system.firstFrame = true;
+    var target = new Audio(this.system.sounds.target);
+    target.play();
   }
 };
 
