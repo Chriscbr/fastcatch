@@ -25,13 +25,13 @@ function Input() {
   this.isMobile = navigator.userAgent.match(/(iPad|iPhone|iPod|android)/i) !== null;
 
   this.mcontrols = {
+    orientation: 0, // orientation of the device
     xaccel: 0, // x acceleration (in the plane of the screen, positive towards the right side of the screen)
     yaccel: 0, // y acceleration (in the plane of the screen, positive towards the top of the screen)
     zaccel: 0, // z accelaration (perpendicular to the screen, positive out of the screen)
     alpha: 0, // rotation, in degrees, of the device frame around its z-axis.
     beta: 0, // rotation, in degrees, of the device frame around its x-axis.
-    gamma: 0, // rotation, in degrees, of the device frame around its y-axis.
-    orientation: 0, // orientation of the device
+    gamma: 0, // rotation, in degrees, of the device frame around its y-axis
     tapping: false
   };
 
@@ -102,42 +102,42 @@ Input.prototype.listen = function () {
 
 };
 
-// Adds event listeners for iOS controls
+// Adds event listeners for mobile controls
 Input.prototype.mlisten = function () {
   
   var self = this;
 
   if (window.DeviceMotionEvent !== undefined) {
     window.ondevicemotion = function (event) {
-      self.ioscontrols.xaccel = event.accelerationIncludingGravity.x;
-      self.ioscontrols.yaccel = event.accelerationIncludingGravity.y;
-      self.ioscontrols.zaccel = event.accelerationIncludingGravity.z;
-      self.ioscontrols.alpha = event.rotationRate.alpha;
-      self.ioscontrols.beta = event.rotationRate.beta;
-      self.ioscontrols.gamma = event.rotationRate.gamma;
+      self.mcontrols.xaccel = event.accelerationIncludingGravity.x;
+      self.mcontrols.yaccel = event.accelerationIncludingGravity.y;
+      self.mcontrols.zaccel = event.accelerationIncludingGravity.z;
+      self.mcontrols.alpha = event.rotationRate.alpha;
+      self.mcontrols.beta = event.rotationRate.beta;
+      self.mcontrols.gamma = event.rotationRate.gamma;
     };
   }
 
   document.addEventListener("touchstart", function (event) {
     if (event.touches.length > 0) {
-      self.ioscontrols.tapping = true;
+      self.mcontrols.tapping = true;
     }
   }, false);
   document.addEventListener("touchend", function (event) {
     if (event.touches.length === 0) {
-      self.ioscontrols.tapping = false;
+      self.mcontrols.tapping = false;
     }
   }, false);
 
   window.onorientationchange = function () {
     if (window.orientation === 0) {
-      self.ioscontrols.orientation = 0;
+      self.mcontrols.orientation = 0;
     } else if (window.orientation === 90) {
-      self.ioscontrols.orientation = 90;
+      self.mcontrols.orientation = 90;
     } else if (window.orientation === -90) {
-      self.ioscontrols.orientation = -90;
+      self.mcontrols.orientation = -90;
     } else if (window.orientation === 180) {
-      self.ioscontrols.orientation = 180;
+      self.mcontrols.orientation = 180;
     }
   };
 

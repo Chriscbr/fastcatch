@@ -1,6 +1,6 @@
 function Draw(canvas, data) {
   this.data = data;
-  
+
   this.font = "Verdana";
 
   this.colors = {
@@ -102,11 +102,19 @@ Draw.prototype.drawBalls = function () {
     var ballOpacity = (1 - (balls.data[i].fadeFrame / balls.data[i].fadeFrameTotal));
     var ballX = balls.data[i].x;
     var ballY = balls.data[i].y;
+    var ballDX = balls.data[i].dx;
+    var ballDY = balls.data[i].dy;
     var ballSize = balls.data[i].size;
     this.ctx.fillStyle = "rgba(255, 255, 255, " + ballOpacity + ")";
     this.ctx.beginPath();
     this.ctx.arc(((ballX / 100) * this.canvas.width), ((ballY / 75) * this.canvas.height), ((ballSize / 100) * this.canvas.width), 0, (Math.PI * 2));
     this.ctx.fill();
+    /*
+    this.ctx.fillStyle = this.colors.DARKGRAY;
+    this.ctx.beginPath();
+    this.ctx.arc((((ballX + (10*ballDX)) / 100) * this.canvas.width), (((ballY - (10*ballDY)) / 75) * this.canvas.height), ((ballSize / 100) * this.canvas.width), 0, (Math.PI * 2));
+    this.ctx.fill();
+    */
   }
 };
 
@@ -344,7 +352,7 @@ Draw.prototype.drawCombos = function () {
   var combos = this.data.combos.current;
   var frames = this.data.combos.frames;
   if (combos > 1) {
-  this.dispMsg("combo x" + combos, this.font, 5, 2, 32.5, "rgba(255, 255, 255, " + (frames / 60) + ")", "left");
+    this.dispMsg("combo x" + combos, this.font, 5, 2, 32.5, "rgba(255, 255, 255, " + (frames / 60) + ")", "left");
   }
 };
 
@@ -449,7 +457,7 @@ Draw.prototype.render = function () {
   if (this.data.stage === 1) {
     this.drawIntro();
   }
-  
+
   if (this.data.stage === 2) {
     this.drawMenu();
   }

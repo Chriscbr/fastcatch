@@ -229,7 +229,7 @@ Game2.prototype.gameLoop = function () {
       }
     } else {
       pauseFrames++;
-      if (self.system.isMobile && self.system.ioscontrols.tapping && self.system.stage === 3 && pauseReleased) {
+      if (self.system.isMobile && self.system.mcontrols.tapping && self.system.stage === 3 && pauseReleased) {
         if (pauseFrames > 30) {
           pauseFrames = 1;
           pauseReleased = false;
@@ -322,14 +322,14 @@ Game2.prototype.updateGameCharacter = function () {
     var charx = this.system.character.x;
     var ballx = this.system.balls.avgBallX;
     var tiltx;
-    if (this.system.ioscontrols.orientation === 0) {
-      tiltx = (this.system.ioscontrols.xaccel + 3) * 15;
-    } else if (this.system.ioscontrols.orientation === 90) {
-      tiltx = ((0 - this.system.ioscontrols.yaccel) + 3) * 15;
-    } else if (this.system.ioscontrols.orientation === -90) {
-      tiltx = (this.system.ioscontrols.yaccel + 3) * 15;
-    } else if (this.system.ioscontrols.orientation === 180) {
-      tiltx = ((0 - this.system.ioscontrols.xaccel) + 3) * 15;
+    if (this.system.mcontrols.orientation === 0) {
+      tiltx = (this.system.mcontrols.xaccel + 3) * 15;
+    } else if (this.system.mcontrols.orientation === 90) {
+      tiltx = ((0 - this.system.mcontrols.yaccel) + 3) * 15;
+    } else if (this.system.mcontrols.orientation === -90) {
+      tiltx = (this.system.mcontrols.yaccel + 3) * 15;
+    } else if (this.system.mcontrols.orientation === 180) {
+      tiltx = ((0 - this.system.mcontrols.xaccel) + 3) * 15;
     }
     this.system.character.x = ((charx * 13) + ballx + tiltx) / 15;
 
@@ -474,7 +474,7 @@ Game2.prototype.updateGameOver = function () {
   this.system.paddle.tilt = 90;
   /*
   Reset's the character's position - not sure if necessary
-  if (!system.isiOS) {
+  if (!system.ism) {
   system.character.x = 50;
   system.character.dx = 0;
   }
@@ -609,11 +609,13 @@ Game2.prototype.testTargetCollision = function (num) {
     this.system.shake = 1;
     this.createGameParticles(target.x, target.y);
     var x, y, i;
-    for (i = 0; i <= 10; i++) {
+    for (i = 0; i <= 50; i++) {
       x = 20 + Math.round(Math.random() * 60);
-      y = 10 + Math.round(Math.random() * 25);
-      if (this.mathx.distance(ball.x, ball.y, target.x, target.y) > 30) {
-        return;
+      y = 10 + Math.round(Math.random() * 30);
+      // var tooClose = this.mathx.distance(ball.x, ball.y, target.x, target.y) < 30;
+      // var tooFar = this.mathx.distance(ball.x, ball.y, target.x, target.y) > 60;
+      if (this.mathx.distance(ball.x, ball.y, x, y) > 20 && this.mathx.distance(ball.x, ball.y, x, y < 40)) {
+        i = 51;
       }
     }
     this.system.target.x = x;
