@@ -15,6 +15,7 @@ function Input() {
     right: false,
     down: false,
     space: false,
+    m: false,
     mouseX: 0,
     mouseY: 0,
     mouseDown: false
@@ -43,7 +44,7 @@ function Input() {
 
 // Adds event listeners for desktop controls
 Input.prototype.listen = function () {
-  
+
   var self = this;
 
   document.addEventListener("keydown", function (key) {
@@ -62,6 +63,9 @@ Input.prototype.listen = function () {
     if (key.keyCode === 40) {
       self.controls.down = true;
     }
+    if (key.keyCode === 77) {
+      self.controls.m = true;
+    }
   }, false);
 
   document.addEventListener("keyup", function (key) {
@@ -79,6 +83,9 @@ Input.prototype.listen = function () {
     }
     if (key.keyCode === 40) {
       self.controls.down = false;
+    }
+    if (key.keyCode === 77) {
+      self.controls.m = false;
     }
   }, false);
 
@@ -104,7 +111,7 @@ Input.prototype.listen = function () {
 
 // Adds event listeners for mobile controls
 Input.prototype.mlisten = function () {
-  
+
   var self = this;
 
   if (window.DeviceMotionEvent !== undefined) {
@@ -122,6 +129,9 @@ Input.prototype.mlisten = function () {
     if (event.touches.length > 0) {
       self.mcontrols.tapping = true;
     }
+    var bounce = document.createElement("audio");
+    bounce.src = "bounce.wav";
+    bounce.play();
   }, false);
   document.addEventListener("touchend", function (event) {
     if (event.touches.length === 0) {

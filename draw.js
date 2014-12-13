@@ -348,6 +348,11 @@ Draw.prototype.drawHSMsg = function () {
   }
 };
 
+// Draws the mute text
+Draw.prototype.drawMuteText = function () {
+  this.dispMsg("m to mute", this.font, 3, 2, 70, this.colors.WHITE, "left");
+};
+
 Draw.prototype.drawCombos = function () {
   var combos = this.data.combos.current;
   var frames = this.data.combos.frames;
@@ -468,6 +473,7 @@ Draw.prototype.render = function () {
 
   if (this.data.stage === 0) {
     this.drawScore();
+    this.drawMuteText();
     this.drawItemDisplay();
     this.drawTimer();
     this.drawTarget();

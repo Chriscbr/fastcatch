@@ -108,8 +108,12 @@ function Game2() {
       reunpressed: false
     },
     sounds: {
-      bounce: new Audio("bounce.wav"),
+      bounce: "bounce.mp3",
       target: "target.mp3"
+    },
+    volume: {
+      muted: false, // variable - default, music is on
+      keypressed: false
     },
     paused: false // variable - if the game is paused
   };
@@ -271,6 +275,7 @@ Game2.prototype.updateGame = function () {
   this.updateGamePaddle();
   this.updateGameCollisions();
   this.updateGameParticles();
+  this.updateGameAudio();
 
 };
 
@@ -331,7 +336,8 @@ Game2.prototype.updateGameCharacter = function () {
     } else if (this.system.mcontrols.orientation === 180) {
       tiltx = ((0 - this.system.mcontrols.xaccel) + 3) * 15;
     }
-    this.system.character.x = ((charx * 13) + ballx + tiltx) / 15;
+    //this.system.character.x = ((charx * 13) + ballx + tiltx) / 15;
+    this.system.character.x = ((charx * 9) + tiltx) / 10;
 
   } else {
 
@@ -506,7 +512,8 @@ Game2.prototype.updateGameCollisions = function () {
     self.system.balls.data[ballNum].direction = direction;
     self.system.balls.data[ballNum].dx = self.system.balls.data[ballNum].bounciness * (Math.sin(self.mathx.toRadians(self.system.balls.data[ballNum].direction)));
     self.system.balls.data[ballNum].dy = self.system.balls.data[ballNum].bounciness * (Math.cos(self.mathx.toRadians(self.system.balls.data[ballNum].direction)));
-    // self.system.sounds.bounce.play();
+    // var bounce = new Audio(self.system.sounds.bounce);
+    // bounce.play();
   };
 
   for (i = 0; i < this.system.balls.data.length; i++) {
@@ -621,8 +628,8 @@ Game2.prototype.testTargetCollision = function (num) {
     this.system.target.x = x;
     this.system.target.y = y;
     this.system.firstFrame = true;
-    var target = new Audio(this.system.sounds.target);
-    target.play();
+    // var target = new Audio(this.system.sounds.target);
+    // target.play();
   }
 };
 
@@ -653,6 +660,25 @@ Game2.prototype.createGameParticles = function (targetx, targety) {
       data.vy = Math.random() * -2;
       this.system.particles.data.push(data);
     }
+  }
+};
+
+// Updates the game audio
+Game2.prototype.updateGameAudio = function () {
+  if (this.input.controls.m) {
+    if (!this.system.volume.keypressed) {
+      this.system.volume.muted = !this.system.volume.muted;
+      this.system.volume.keypressed = true;
+    }
+  } else {
+    this.system.volume.keypressed = false;
+  }
+  if (this.system.volume.muted) {
+    var music = document.getElementById("music");
+    music.volume = 0;
+  } else {
+    var music = document.getElementById("music");
+    music.volume = 1;
   }
 };
 
