@@ -35,6 +35,7 @@ function Game2() {
     shake: 0, // used for making the screen scale up during hits (0-3)
     shakelength: 6, // number of frames for the screen to shake
     scaled: false, // used to tell if the canvas is already scaled
+    totalhits: 0, // total number of targets hit
     score: {
       current: 0, // variable - score of current round
       high: 10, // variable - high score
@@ -274,6 +275,7 @@ Game2.prototype.updateGame = function () {
   this.updateGameBalls();
   this.updateGamePaddle();
   this.updateGameCollisions();
+  this.updateGameItems();
   this.updateGameParticles();
   this.updateGameAudio();
 
@@ -493,6 +495,7 @@ Game2.prototype.updateGameOver = function () {
   this.system.score.current = 0;
   this.system.combos.current = 0;
   this.system.combos.hitonbounce = false;
+  this.system.totalhits = 0;
 };
 
 // Handles the general collisions in the game
@@ -611,6 +614,7 @@ Game2.prototype.testTargetCollision = function (num) {
     } else {
       this.system.score.current += baseScore;
     }
+    this.system.totalhits += 1;
     this.system.combos.hitonbounce = true;
     this.system.score.frame = 60;
     this.system.shake = 1;
@@ -631,6 +635,253 @@ Game2.prototype.testTargetCollision = function (num) {
     // var target = new Audio(this.system.sounds.target);
     // target.play();
   }
+};
+
+// Updates game logic pertaining to items
+Game2.prototype.updateGameItems = function () {
+  
+  // items:
+  // 0: none
+  // 1: random animation
+  // 2: 3x
+  // 3: extra balls
+  // 4: magnet
+  
+  // This rotates the item box
+  this.system.itemBox.direction += this.system.itemBox.turnSpeed;
+  if (this.system.itemBox.direction >= 360) {
+    this.system.itemBox.direction = 0;
+  }
+
+  // This ensures the itembox resets upon death
+  if (this.system.score.current < 10) {
+    this.system.itemDisplay.displayed = 0;
+    this.system.itemDisplay.current = 0;
+    this.system.itemDisplay.frame = 0;
+    this.system.itemBox.appearing = false;
+  }
+
+  if (this.system.totalhits % 20 === 5 && this.system.firstFrame) {
+    this.createItemBox();
+  }
+
+  var itemBoxCollided = false;
+  if (this.system.itemBox.appearing === true) {
+    for (i = 0; i < this.system.balls.data.length; i++) {
+      if (this.checkItemCollision(i)) {
+        itemBoxCollided = true;
+      }
+    }
+    if (itemBoxCollided) {
+      this.system.itemBox.appearing = false;
+      this.createGameParticles(this.system.itemBox.x, this.system.itemBox.y);
+      this.system.itemDisplay.current = 1;
+      this.system.itemDisplay.displayed = 1;
+      this.system.itemDisplay.frame = 660;
+    }
+  }
+
+  if (this.system.itemDisplay.frame > 0) {
+    this.system.itemDisplay.frame--;
+    if (this.system.itemDisplay.frame === 600) {
+      this.system.itemDisplay.current = Math.floor(Math.random() * 3) + 2;
+      // this.system.itemDisplay.current = 3; for testing
+      this.system.itemDisplay.displayed = this.system.itemDisplay.current;
+    }
+    if (this.system.itemDisplay.frame === 540 || this.system.itemDisplay.frame === 480) {
+      if (this.system.itemDisplay.current === 3) {
+        var lastBall = this.system.balls.data.length - 1;
+        this.system.balls.data.push(new Ball(this.system.balls.data[lastBall].x, this.system.balls.data[lastBall].y, this.system.balls.data[lastBall].dx, this.system.balls.data[lastBall].dy));
+      }
+    }
+  }
+
+  if (this.system.itemDisplay.frame === 0) {
+    // This prevents the magnet from ending whilthis.e the ball is falling (to troll the player)
+    if (this.system.balls.data[0].dy < 0 && this.system.itemDisplay.current === 4) {
+      this.system.itemDisplay.frame++;
+    } else {
+      this.system.itemDisplay.current = 0;
+      this.system.itemDisplay.displayed = 0;
+    }
+  }
+
+  this.system.firstFrame = false;
+};
+
+// Shows an item box
+Game2.prototype.createItemBox = function () {
+  this.system.itemBox.direction = 45;
+  this.system.itemBox.appearing = true;
+
+  var x, y, i, j, tooClose;
+  // loop to try to place item away from balls 10 times
+  for (i = 0; i <= 10; i++) {
+    x = 20 + Math.round(Math.random() * 60);
+    y = 10 + Math.round(Math.random() * 35);
+    tooClose = false;
+    // loop to compare item position to each ball
+    for (j = 0; j < this.system.balls.data.length; j++) {
+      if (this.mathx.distance(this.system.balls.data[j].x, this.system.balls.data[j].y, this.system.itemBox.x, this.system.itemBox.y) < 20) {
+        tooClose = true;
+      }
+    }
+    if (!tooClose) {
+      i = 11;
+    }
+  }
+  this.system.itemBox.x = x;
+  this.system.itemBox.y = y;
+};
+
+// Checks to see if ball (num) colliding w/ item box
+Game2.prototype.checkItemCollision = function (num) {
+  var direction = this.system.itemBox.direction;
+  var itemx = this.system.itemBox.x;
+  var itemy = this.system.itemBox.y;
+  var ballx = this.system.balls.data[num].x;
+  var bally = this.system.balls.data[num].y;
+  var size = this.system.itemBox.size;
+  var ballsize = this.system.balls.data[num].size;
+
+  var point1; // vertices of the square
+  var point2; // ...
+  var point3; // ...
+  var point4; // ...
+  var slope1; // slope of points 1 & 2 or 3 & 4
+  var slope2; // slope of ponits 1 & 3 or 2 & 4
+  var yint12; // y intereps of lines between given points
+  var yint13; // ...
+  var yint24; // ...
+  var yint34; // ...
+
+  point1 = this.mathx.rotatePoint(itemx, itemy, this.mathx.toRadians(direction), itemx - ((0.5 * size) + ballsize), itemy - ((0.5 * size) + ballsize));
+  point2 = this.mathx.rotatePoint(itemx, itemy, this.mathx.toRadians(direction), itemx + ((0.5 * size) + ballsize), itemy - ((0.5 * size) + ballsize));
+  point3 = this.mathx.rotatePoint(itemx, itemy, this.mathx.toRadians(direction), itemx - ((0.5 * size) + ballsize), itemy + ((0.5 * size) + ballsize));
+  point4 = this.mathx.rotatePoint(itemx, itemy, this.mathx.toRadians(direction), itemx + ((0.5 * size) + ballsize), itemy + ((0.5 * size) + ballsize));
+
+  // Assign slopes...
+
+  if (point1.x === point2.x) {
+    slope1 = "undefined";
+  } else {
+    slope1 = ((point2.y - point1.y) / (point2.x - point1.x));
+  }
+
+  if (point1.x === point3.x) {
+    slope2 = "undefined";
+  } else {
+    slope2 = ((point3.y - point1.y) / (point3.x - point1.x));
+  }
+
+  // Assign y intercepts...
+
+  if (slope1 === "undefined") {
+    yint12 = "undefined";
+    yint34 = "undefined";
+  } else {
+    yint12 = point1.y - (slope1 * point1.x);
+    yint34 = point3.y - (slope1 * point3.x);
+  }
+
+  if (slope2 === "undefined") {
+    yint13 = "undefined";
+    yint24 = "undefined";
+  } else {
+    yint13 = point1.y - (slope2 * point1.x);
+    yint24 = point2.y - (slope2 * point2.x);
+  }
+
+  // Check for collision on line from 1 to 2
+
+  if (point1.x === point2.x) {
+    if (point1.y > point2.y) { // right side of the square
+      if (ballx > point1.x) {
+        return false;
+      }
+    } else { // left side of the square
+      if (ballx < point1.x) {
+        return false;
+      }
+    }
+  } else if (point1.x < point2.x) { // top side of the square
+    if (bally < yint12 + (slope1 * ballx)) {
+      return false;
+    }
+  } else if (point1.x > point2.x) { // bottom side of the square
+    if (bally > yint12 + (slope1 * ballx)) {
+      return false;
+    }
+  }
+
+  // Check for collision on line from 3 to 4
+
+  if (point3.x === point4.x) {
+    if (point3.y > point4.y) { // left side of the square
+      if (ballx < point3.x) {
+        return false;
+      }
+    } else { // right side of the square
+      if (ballx > point3.x) {
+        return false;
+      }
+    }
+  } else if (point3.x < point4.x) { // bottom side of the square
+    if (bally > yint34 + (slope1 * ballx)) {
+      return false;
+    }
+  } else if (point3.x > point4.x) { // top side of the square
+    if (bally < yint34 + (slope1 * ballx)) {
+      return false;
+    }
+  }
+
+  // Check for collision on line from 1 to 3
+
+  if (point1.x === point3.x) {
+    if (point1.y > point3.y) { // left side of the square
+      if (ballx < point1.x) {
+        return false;
+      }
+    } else { // right side of the square
+      if (ballx > point1.x) {
+        return false;
+      }
+    }
+  } else if (point1.x < point3.x) { // bottom side of the square
+    if (bally > yint13 + (slope2 * ballx)) {
+      return false;
+    }
+  } else if (point1.x > point3.x) { // top side of the square
+    if (bally < yint13 + (slope2 * ballx)) {
+      return false;
+    }
+  }
+
+  // Check for collision on line from 2 to 4
+
+  if (point2.x === point4.x) {
+    if (point2.y > point4.y) { // right side of the square
+      if (ballx > point2.x) {
+        return false;
+      }
+    } else { // left side of the square
+      if (ballx < point2.x) {
+        return false;
+      }
+    }
+  } else if (point2.x < point4.x) { // top side of the square
+    if (bally < yint24 + (slope2 * ballx)) {
+      return false;
+    }
+  } else if (point2.x > point4.x) { // bottom side of the square
+    if (bally > yint24 + (slope2 * ballx)) {
+      return false;
+    }
+  }
+
+  return true;
+
 };
 
 // Updates game particles' physics

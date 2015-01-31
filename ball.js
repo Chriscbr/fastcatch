@@ -10,6 +10,6 @@ function Ball(x, y, dx, dy) {
   this.size = 3.5; // size
   this.bounciness = 2.2; // determines velocity after collision
   this.fadeIn = true; // ball is respawning?
-  this.fadeFrame = 30; // used if ball is respawning
-  this.fadeFrameTotal = 30; // used if ball is respawning
+  this.fadeFrame = 8; // used if ball is respawning
+  this.fadeFrameTotal = 8; // used if ball is respawning
 }
