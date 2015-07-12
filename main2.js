@@ -28,7 +28,7 @@ function Game2() {
     isMobile: navigator.userAgent.match(/(iPad|iPhone|iPod|android)/i) !== null, // constant
     controls: this.input.controls,
     mcontrols: this.input.mcontrols,
-    stage: 0, // variable - determines the overall state of the game
+    stage: 1, // variable - determines the overall state of the game
     gameSpeed: 1, // variable - increases by gameAccel every frame
     gameAccel: 0.0001, // constant - speed at which gameSpeed increases
     // firstFrame: false, // reports true during the frame a point is scored
@@ -113,7 +113,7 @@ function Game2() {
       target: "target.mp3"
     },
     volume: {
-      muted: false, // variable - default, music is on
+      muted: false, // variable - default, music is off
       keypressed: false
     },
     paused: false // variable - if the game is paused
@@ -179,11 +179,6 @@ Game2.prototype.gameLoop = function () {
     self.stats.end();
 
   }, 1000 / 60);
-};
-
-// Updates the game's paused state
-Game2.prototype.checkPause = function () {
-  // code
 };
 
 /*
@@ -253,6 +248,11 @@ Game2.prototype.gameLoop = function () {
 };
 */
 
+// Updates the game's paused state
+Game2.prototype.checkPause = function () {
+  // code
+};
+
 // Updates all game data, including menus, animations, etc.
 Game2.prototype.update = function () {
 
@@ -262,7 +262,67 @@ Game2.prototype.update = function () {
     this.updateGame();
 
   }
+  
+  // Main menu (default)
+  if (this.system.stage === 1) {
+    
+    this.updateMenu();
+  }
+  
+  // Instructions
+  if (this.system.stage === 2) {
+    
+    this.updateInstructions();
+    
+  }
 
+};
+
+// Updates the main menu
+Game2.prototype.updateMenu = function () {
+  
+  this.system.title.frame++;
+  if (this.system.title.frame < 30) {
+    this.system.title.titleOpacity = (this.system.title.frame / 30) * 100;
+    this.system.title.buttonOpacity = 0;
+  } else if (this.system.title.frame >= 30 && this.system.title.frame < 60) {
+    this.system.title.titleOpacity = 100;
+    this.system.title.buttonOpacity = ((this.system.title.frame - 30) / 30) * 100;
+  } else if (this.system.title.frame === 60) {
+    this.system.title.titleOpacity = 100;
+    this.system.title.buttonOpacity = 100;
+  } else if (this.system.title.frame > 60) {
+    if (!this.system.isMobile && this.system.controls.space === true) {
+      this.system.stage = 2;
+    }
+    if (this.system.isMobile && this.system.mcontrols.tapping === true) {
+      this.system.stage = 2;
+    }
+  }
+  
+};
+
+// Updates the instructions
+Game2.prototype.updateInstructions = function () {
+  
+  if (this.system.instructions.unpressed === false) {
+    if (!this.system.isMobile && this.system.controls.space === false || this.system.isMobile && this.system.mcontrols.tapping === false) {
+      this.system.instructions.unpressed = true;
+    }
+  } else if (this.system.instructions.unpressed) {
+    if (!this.system.isMobile && this.system.controls.space === true || this.system.isMobile && this.system.mcontrols.tapping === true) {
+      this.system.instructions.repressed = true;
+    }
+  }
+  if (this.system.instructions.repressed) {
+    if (!this.system.isMobile && this.system.controls.space === false || this.system.isMobile && this.system.mcontrols.tapping === false) {
+      this.system.instructions.reunpressed = true;
+      this.system.stage = 0;
+      var music = document.getElementById("music");
+      music.play();
+    }
+  }
+  
 };
 
 // Updates the data of the core game
@@ -924,12 +984,12 @@ Game2.prototype.updateGameAudio = function () {
   } else {
     this.system.volume.keypressed = false;
   }
+  
+  var music = document.getElementById("music");
   if (this.system.volume.muted) {
-    var music = document.getElementById("music");
-    music.volume = 0;
+    music.muted = true;
   } else {
-    var music = document.getElementById("music");
-    music.volume = 1;
+    music.muted = false;
   }
 };
 

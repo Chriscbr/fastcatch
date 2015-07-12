@@ -390,6 +390,7 @@ Draw.prototype.drawDebugGrid = function () {
 };
 
 // Draws intro messages
+/*
 Draw.prototype.drawIntro = function () {
   var intro = this.data.intro;
   this.dispMsg(intro.messages[intro.currentMsg], this.font, 4, intro.msgPos, 37.5, "rgba(255, 255, 255, " + (intro.msgOpacity / 100) + ")", "center");
@@ -401,29 +402,30 @@ Draw.prototype.drawIntro = function () {
     }
   }
 };
+*/
 
 // Displays menu text
 Draw.prototype.drawMenu = function () {
   var title = this.data.title;
-  this.dispMsg("fast catch", this.font, 10, 50, 28, "rgba(255, 255, 255, " + (title.titleOpacity / 100) + ")", "center");
-  this.dispMsg("start", this.font, 6, 50, 45, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
+  this.dispMsg("fast catch", this.font, 10, 50, 25, "rgba(255, 255, 255, " + (title.titleOpacity / 100) + ")", "center");
+  this.dispMsg("start", this.font, 5, 50, 50, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
   if (this.isiOS) {
-    this.dispMsg("(tap the screen)", this.font, 3, 50, 52, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
+    this.dispMsg("(tap the screen)", this.font, 3, 50, 56, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
   } else {
-    this.dispMsg("(press space)", this.font, 3, 50, 52, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
+    this.dispMsg("(press space)", this.font, 3, 50, 56, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
   }
 };
 
 // Displays instructions
 Draw.prototype.drawInstructions = function () {
-  if (this.isiOS) {
+  if (this.isMobile) {
     this.dispMsg("hold your iPad sideways", this.font, 4, 50, 20, this.colors.WHITE, "center");
     this.dispMsg("tilt your iPad to move the paddle", this.font, 4, 50, 30, this.colors.WHITE, "center");
     this.dispMsg("double tap to pause", this.font, 4, 50, 40, this.colors.WHITE, "center");
     this.dispMsg("(tap the screen to start)", this.font, 3, 50, 50, this.colors.WHITE, "center");
   } else {
     this.dispMsg("use ← and → to move", this.font, 4, 50, 25, this.colors.WHITE, "center");
-    this.dispMsg("press space to pause", this.font, 4, 50, 35, this.colors.WHITE, "center");
+    this.dispMsg("hit as many targets as possible", this.font, 4, 50, 35, this.colors.WHITE, "center");
     this.dispMsg("(press space to start)", this.font, 3, 50, 45, this.colors.WHITE, "center");
   }
 };
@@ -459,15 +461,17 @@ Draw.prototype.render = function () {
 
   this.shake();
 
+  /*
   if (this.data.stage === 1) {
     this.drawIntro();
   }
+  */
 
-  if (this.data.stage === 2) {
+  if (this.data.stage === 1) {
     this.drawMenu();
   }
 
-  if (this.data.stage === 3) {
+  if (this.data.stage === 2) {
     this.drawInstructions();
   }
 
