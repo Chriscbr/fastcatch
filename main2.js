@@ -108,10 +108,6 @@ function Game2() {
       // since being unpressed
       reunpressed: false
     },
-    sounds: {
-      bounce: "bounce.mp3",
-      target: "target.mp3"
-    },
     volume: {
       muted: false, // variable - default, music is off
       keypressed: false
@@ -575,8 +571,6 @@ Game2.prototype.updateGameCollisions = function () {
     self.system.balls.data[ballNum].direction = direction;
     self.system.balls.data[ballNum].dx = self.system.balls.data[ballNum].bounciness * (Math.sin(self.mathx.toRadians(self.system.balls.data[ballNum].direction)));
     self.system.balls.data[ballNum].dy = self.system.balls.data[ballNum].bounciness * (Math.cos(self.mathx.toRadians(self.system.balls.data[ballNum].direction)));
-    // var bounce = new Audio(self.system.sounds.bounce);
-    // bounce.play();
   };
 
   for (i = 0; i < this.system.balls.data.length; i++) {
@@ -692,8 +686,6 @@ Game2.prototype.testTargetCollision = function (num) {
     this.system.target.x = x;
     this.system.target.y = y;
     this.system.firstFrame = true;
-    // var target = new Audio(this.system.sounds.target);
-    // target.play();
   }
 };
 
