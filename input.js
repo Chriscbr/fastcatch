@@ -129,9 +129,6 @@ Input.prototype.mlisten = function () {
     if (event.touches.length > 0) {
       self.mcontrols.tapping = true;
     }
-    var bounce = document.createElement("audio");
-    bounce.src = "bounce.wav";
-    bounce.play();
   }, false);
   document.addEventListener("touchend", function (event) {
     if (event.touches.length === 0) {

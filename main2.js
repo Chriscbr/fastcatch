@@ -14,8 +14,9 @@ function Game2() {
   // Sets up the FPS counter
   this.setupStats();
 
+  this.isFullscreen = false;
   if (this.canvas.getContext) {
-    this.setupCanvas(this.canvas);
+    this.setupCanvas(this.canvas, this.isFullscreen);
   }
 
   // Instantiating core classes
@@ -118,7 +119,7 @@ function Game2() {
 }
 
 // Resets the canvas's size
-Game2.prototype.setupCanvas = function (canvas) {
+Game2.prototype.setupCanvas = function (canvas, isFullscreen) {
   window.onresize = function () {
     var screenRatio = window.innerWidth / window.innerHeight;
     if (screenRatio > (4 / 3)) {
@@ -141,7 +142,28 @@ Game2.prototype.setupCanvas = function (canvas) {
   };
 
   window.onresize();
-};
+
+  this.fullscreen = isFullscreen;
+
+  canvas.addEventListener('click', function() {
+    if (this.fullscreen === true) {
+      return;
+    }
+    var doc = window.document;
+    var docEl = doc.documentElement;
+
+    var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+    var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+
+    if(!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+      requestFullScreen.call(docEl);
+    }
+    else {
+      cancelFullScreen.call(doc);
+    }
+    this.fullscreen = true;
+  });
+}
 
 // Sets up the FPS counter
 Game2.prototype.setupStats = function () {
