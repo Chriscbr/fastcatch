@@ -146,7 +146,7 @@ Game2.prototype.setupCanvas = function (canvas, isFullscreen) {
   this.fullscreen = isFullscreen;
 
   canvas.addEventListener('click', function() {
-    if (this.fullscreen === true) {
+    if (this.fullscreen === true || navigator.userAgent.match(/(iPad|iPhone|iPod|android)/i) === null) {
       return;
     }
     var doc = window.document;
