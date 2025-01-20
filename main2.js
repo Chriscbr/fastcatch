@@ -19,14 +19,16 @@ function Game2() {
     this.setupCanvas(this.canvas, this.isFullscreen);
   }
 
+  const isMobile = navigator.userAgent.match(/(iPad|iPhone|iPod|Android|BlackBerry|Windows Phone)/i) !== null;
+
   // Instantiating core classes
-  this.input = new Input();
+  this.input = new Input(isMobile);
   this.cookies = new Cookies();
   this.mathx = new Math2();
 
   // Setting up the system
   this.system = {
-    isMobile: navigator.userAgent.match(/(iPad|iPhone|iPod|android)/i) !== null, // constant
+    isMobile: isMobile, // constant
     controls: this.input.controls,
     mcontrols: this.input.mcontrols,
     stage: 1, // variable - determines the overall state of the game
@@ -120,19 +122,23 @@ function Game2() {
 
 // Resets the canvas's size
 Game2.prototype.setupCanvas = function (canvas, isFullscreen) {
+  var self = this;
+
   window.onresize = function () {
     var screenRatio = window.innerWidth / window.innerHeight;
+    canvas.height = 1500;
+    canvas.width = 2000;
     if (screenRatio > (4 / 3)) {
-      canvas.height = window.innerHeight;
-      canvas.width = window.innerHeight * (4 / 3);
+      canvas.style.height = "100%";
+      canvas.style.width = "";
       if (screenRatio - (4 / 3) > 0.01) {
         canvas.style.borderWidth = "0px 2px";
       } else {
         canvas.style.borderWidth = "0px";
       }
     } else {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerWidth * (3 / 4);
+      canvas.style.height = "";
+      canvas.style.width = "100%";
       if (screenRatio - (4 / 3) < -0.01) {
         canvas.style.borderWidth = "2px 0px";
       } else {
@@ -146,22 +152,29 @@ Game2.prototype.setupCanvas = function (canvas, isFullscreen) {
   this.fullscreen = isFullscreen;
 
   canvas.addEventListener('click', function() {
-    if (this.fullscreen === true || navigator.userAgent.match(/(iPad|iPhone|iPod|android)/i) === null) {
-      return;
-    }
-    var doc = window.document;
-    var docEl = doc.documentElement;
+    window.DeviceMotionEvent.requestPermission().then((permissionState) => {
+      if (permissionState === 'granted') {
+        self.input.mlisten();
+      } else {
+        self.system.stage = 3;
+      }
+    });
+    // if (this.fullscreen === true || !self.system.isMobile) {
+    //   return;
+    // }
+    // var doc = window.document;
+    // var docEl = doc.documentElement;
 
-    var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
-    var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+    // var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+    // var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
 
-    if(!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
-      requestFullScreen.call(docEl);
-    }
-    else {
-      cancelFullScreen.call(doc);
-    }
-    this.fullscreen = true;
+    // if(!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+    //   requestFullScreen.call(docEl);
+    // }
+    // else {
+    //   cancelFullScreen.call(doc);
+    // }
+    // this.fullscreen = true;
   });
 }
 

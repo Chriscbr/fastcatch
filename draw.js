@@ -361,7 +361,7 @@ Draw.prototype.drawPauseOverlay = function () {
   this.ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
   this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   this.dispMsg("paused", this.font, 8, 50, 30, this.colors.WHITE, "center");
-  if (this.isiOS) {
+  if (this.data.isMobile) {
     this.dispMsg("(double tap to continue)", this.font, 3, 50, 40, this.colors.WHITE, "center");
   } else {
     this.dispMsg("(press space to continue)", this.font, 3, 50, 40, this.colors.WHITE, "center");
@@ -390,7 +390,7 @@ Draw.prototype.drawIntro = function () {
   var intro = this.data.intro;
   this.dispMsg(intro.messages[intro.currentMsg], this.font, 4, intro.msgPos, 37.5, "rgba(255, 255, 255, " + (intro.msgOpacity / 100) + ")", "center");
   if (this.data.score.high > 10) { // if the user has played before...
-    if (this.isiOS) {
+    if (this.data.isMobile) {
       this.dispMsg("(tap to skip)", this.font, 3, 98, 70, this.colors.WHITE, "right");
     } else {
       this.dispMsg("(press space to skip)", this.font, 3, 98, 70, this.colors.WHITE, "right");
@@ -404,25 +404,33 @@ Draw.prototype.drawMenu = function () {
   var title = this.data.title;
   this.dispMsg("fast catch", this.font, 10, 50, 25, "rgba(255, 255, 255, " + (title.titleOpacity / 100) + ")", "center");
   this.dispMsg("start", this.font, 5, 50, 50, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
-  if (this.isiOS) {
-    this.dispMsg("(tap the screen)", this.font, 3, 50, 56, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
+  if (this.data.isMobile) {
+    this.dispMsg("(tap the screen)", this.font, 2, 50, 60, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
   } else {
-    this.dispMsg("(press space)", this.font, 3, 50, 56, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
+    this.dispMsg("(press space)", this.font, 2, 50, 60, "rgba(255, 255, 255, " + (title.buttonOpacity / 100) + ")", "center");
   }
 };
 
 // Displays instructions
 Draw.prototype.drawInstructions = function () {
-  if (this.isMobile) {
-    this.dispMsg("hold your iPad sideways", this.font, 4, 50, 20, this.colors.WHITE, "center");
-    this.dispMsg("tilt your iPad to move the paddle", this.font, 4, 50, 30, this.colors.WHITE, "center");
-    this.dispMsg("double tap to pause", this.font, 4, 50, 40, this.colors.WHITE, "center");
-    this.dispMsg("(tap the screen to start)", this.font, 3, 50, 50, this.colors.WHITE, "center");
+  if (this.data.isMobile) {
+    this.dispMsg("hold your mobile device sideways", this.font, 3, 50, 22, this.colors.WHITE, "center");
+    this.dispMsg("rotate your device to move the paddle", this.font, 3, 50, 30, this.colors.WHITE, "center");
+    this.dispMsg("double tap to pause", this.font, 3, 50, 38, this.colors.WHITE, "center");
+    this.dispMsg("(tap the screen to start)", this.font, 2, 50, 50, this.colors.WHITE, "center");
   } else {
     this.dispMsg("use ← and → to move", this.font, 4, 50, 25, this.colors.WHITE, "center");
     this.dispMsg("hit as many targets as possible", this.font, 4, 50, 35, this.colors.WHITE, "center");
     this.dispMsg("(press space to start)", this.font, 3, 50, 45, this.colors.WHITE, "center");
   }
+};
+
+// Draws permission denied message
+Draw.prototype.drawPermissionDenied = function () {
+  this.dispMsg("this game requires", this.font, 4, 50, 25, this.colors.WHITE, "center");
+  this.dispMsg("device motion permissions", this.font, 4, 50, 33, this.colors.WHITE, "center");
+  this.dispMsg("(refresh the page or", this.font, 3, 50, 45, this.colors.WHITE, "center");
+  this.dispMsg("check your browser's settings)", this.font, 3, 50, 51, this.colors.WHITE, "center");
 };
 
 // Makes the screen shake
@@ -462,12 +470,18 @@ Draw.prototype.render = function () {
   }
   */
 
+  // this.dispMsg(`isfn: ${typeof window.DeviceMotionEvent.requestPermission}`, this.font, 3, 0, 1, this.colors.WHITE, "left");
+
   if (this.data.stage === 1) {
     this.drawMenu();
   }
 
   if (this.data.stage === 2) {
     this.drawInstructions();
+  }
+
+  if (this.data.stage === 3) {
+    this.drawPermissionDenied();
   }
 
   if (this.data.stage === 0) {
